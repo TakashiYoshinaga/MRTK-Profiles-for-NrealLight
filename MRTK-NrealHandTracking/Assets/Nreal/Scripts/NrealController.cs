@@ -181,7 +181,7 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
         /// </summary>
         protected void UpdateInteractions()
         {
-            MixedRealityPose pointerPose = jointPoses[TrackedHandJoint.Palm];
+            MixedRealityPose pointerPose = jointPoses[TrackedHandJoint.IndexTip];
             MixedRealityPose gripPose = jointPoses[TrackedHandJoint.Palm];
             MixedRealityPose indexPose = jointPoses[TrackedHandJoint.IndexTip];
             // Only update the hand ray if the hand is in pointing pose

@@ -50,7 +50,7 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
         /// </summary>
         private readonly Dictionary<Handedness, NrealController> trackedHands = new Dictionary<Handedness,NrealController>();
 
-        private static readonly ProfilerMarker UpdatePerfMarker = new ProfilerMarker("[MRTK] NrealMotionDeviceManager.Update");
+        //private static readonly ProfilerMarker UpdatePerfMarker = new ProfilerMarker("[MRTK] NrealMotionDeviceManager.Update");
 
         /// <inheritdoc />
         public override void Enable()
@@ -158,8 +158,8 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
         {
             base.Update();
            
-            using (UpdatePerfMarker.Auto())
-            {
+            //using (UpdatePerfMarker.Auto())
+            //{
                 if (NRInput.IsInitialized)
                 {
 
@@ -171,7 +171,7 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
                         hand.Value.UpdateState();
                     }
                 }
-            }
+           // }
         }
     }
 }

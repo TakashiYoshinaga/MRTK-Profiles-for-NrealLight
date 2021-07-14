@@ -181,7 +181,7 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
         /// </summary>
         protected void UpdateInteractions()
         {
-            MixedRealityPose pointerPose = jointPoses[TrackedHandJoint.IndexTip];
+            MixedRealityPose pointerPose = jointPoses[TrackedHandJoint.Palm];
             MixedRealityPose gripPose = jointPoses[TrackedHandJoint.Palm];
             MixedRealityPose indexPose = jointPoses[TrackedHandJoint.IndexTip];
             // Only update the hand ray if the hand is in pointing pose
@@ -190,7 +190,7 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
                 HandRay.Update(pointerPose.Position, GetPalmNormal(), CameraCache.Main.transform, ControllerHandedness);
                 Ray ray = HandRay.Ray;
 
-                pointerPose.Position = ray.origin;
+                pointerPose.Position = jointPoses[TrackedHandJoint.IndexKnuckle].Position;//ray.origin;
                 pointerPose.Rotation = Quaternion.LookRotation(ray.direction);
             }
 

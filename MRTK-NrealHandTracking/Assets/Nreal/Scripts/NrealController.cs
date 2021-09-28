@@ -89,6 +89,8 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
             {
                 if (nrealHand != null && nrealHand.GetHandState().isTracked)
                 {
+                    IsPositionAvailable = IsRotationAvailable = true;
+
                     HandJointID jointID = ConvertMRTKJointToNrealJoint(joint);
                     // Get the pose of the nreal joint
                     HandState hand= nrealHand.GetHandState();
@@ -102,6 +104,8 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
                 }
                 else
                 {
+                    IsPositionAvailable = IsRotationAvailable = false;
+
                     jointPoses[joint] = MixedRealityPose.ZeroIdentity;
                 }
             }

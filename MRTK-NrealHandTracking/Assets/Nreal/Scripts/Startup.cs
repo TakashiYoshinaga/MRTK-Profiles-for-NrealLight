@@ -4,10 +4,12 @@ using UnityEngine;
 using UnityEditor;
 using System.Threading.Tasks;
 
+#if UNITY_EDITOR
 [InitializeOnLoad]
+#endif
 public static class Startup
 {
-
+#if UNITY_EDITOR
     private class StartUpData : ScriptableSingleton<StartUpData>
     {
         [SerializeField]
@@ -28,5 +30,5 @@ public static class Startup
         Debug.Log("load nrsdk");
 
     }
-   
+#endif
 }

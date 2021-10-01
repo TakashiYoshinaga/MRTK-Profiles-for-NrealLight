@@ -33,7 +33,7 @@ public class QuitApplication : MonoBehaviour
                 }
                 if (NRHandPointer_L != null)
                 {
-                    NRHandPointer_L.SetActive(false);
+                    NRHandPointer_L.SetActive(true);
                 }
                 PointerUtils.SetHandRayPointerBehavior(PointerBehavior.AlwaysOff);
             });

@@ -685,6 +685,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae19f993158a043699f58e0c8133c4c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  NRHandPointer_R: {fileID: 1489191378}
+  NRHandPointer_L: {fileID: 1647304191}
 --- !u!4 &1409385376
 Transform:
   m_ObjectHideFlags: 0
@@ -699,6 +701,12 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1489191378 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1274164330364456, guid: 7f0032a8f9796bb418c31cdb8c16b78e,
+    type: 3}
+  m_PrefabInstance: {fileID: 1941979666}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1547699198
 GameObject:
   m_ObjectHideFlags: 0
@@ -791,6 +799,12 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &1647304191 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1660479356263662, guid: 9e73c86b401a7c34cb70b4dcaf94be65,
+    type: 3}
+  m_PrefabInstance: {fileID: 607659583}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1740129528
 GameObject:
   m_ObjectHideFlags: 0

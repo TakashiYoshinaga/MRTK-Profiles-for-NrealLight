@@ -10,6 +10,11 @@ https://developer.nreal.ai/download
 ## Version of Unity
 Unity 2020.3.8f1
 <br>
+## Tutorial
+https://youtu.be/-bFwu-2yyqw
+<br>
+Video was created by Robi-TheXRGuy
+<br>
 ## Trouble Shoot
 If hand interaction doesn't work immediately after applying this profile to your project , please reboot unity editor.
 <br>

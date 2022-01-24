@@ -1,14 +1,14 @@
 # MRTK-Profiles-for-NrealLight
  
 ## Dependencies:
-MRTK-Unity v2.7.2<br>
-https://github.com/microsoft/MixedRealityToolkit-Unity/releases/tag/v2.7.2
+MRTK-Unity v2.7.3<br>
+https://github.com/microsoft/MixedRealityToolkit-Unity/releases/tag/2.7.3
 <br>
 NRSDK Unity SDK 1.7.0<br>
 https://developer.nreal.ai/download
 <br>
 ## Version of Unity
-Unity 2019.4.28f1
+Unity 2020.3.8f1
 <br>
 ## Trouble Shoot
 If hand interaction doesn't work immediately after applying this profile to your project , please reboot unity editor.

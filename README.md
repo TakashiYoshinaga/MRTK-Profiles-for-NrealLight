@@ -4,7 +4,7 @@
 MRTK-Unity v2.7.3<br>
 https://github.com/microsoft/MixedRealityToolkit-Unity/releases/tag/2.7.3
 <br>
-NRSDK Unity SDK 1.7.0<br>
+NRSDK Unity SDK 1.8.0<br>
 https://developer.nreal.ai/download
 <br>
 ## Version of Unity

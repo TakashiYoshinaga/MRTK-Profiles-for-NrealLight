@@ -2,7 +2,7 @@
  
 ## Dependencies:
 These SDK must be installed before hand.<br>
-MRTK-Unity v2.7.3 (Both Foundation and Examples!)<br>
+MRTK-Unity v2.7.3 (Both Foundation and Examples are required if you want to try demo scene.)<br>
 https://github.com/microsoft/MixedRealityToolkit-Unity/releases/tag/2.7.3
 <br>
 NRSDK Unity SDK 1.8.0<br>

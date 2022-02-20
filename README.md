@@ -1,7 +1,7 @@
 # MRTK-Profiles-for-NrealLight
  
 ## Dependencies:
-These SDK should be installed before hand.<br>
+These SDK must be installed before hand.<br>
 MRTK-Unity v2.7.3<br>
 https://github.com/microsoft/MixedRealityToolkit-Unity/releases/tag/2.7.3
 <br>

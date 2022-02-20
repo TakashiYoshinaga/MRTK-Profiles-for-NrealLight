@@ -5,8 +5,10 @@ These SDK must be installed before hand.<br>
 (1) NRSDK Unity SDK 1.8.0<br>
 https://developer.nreal.ai/download
 <br>
-(2) MRTK-Unity v2.7.3 (Both Foundation and Examples are required if you want to try demo scene.)<br>
+(2) MRTK-Unity v2.7.3<br>
 https://github.com/microsoft/MixedRealityToolkit-Unity/releases/tag/2.7.3
+<br>
+*Both Foundation and Examples are required if you want to try demo scene.
 <br>
 *You don't need to download & install MRTK if you get started with the project of this repository.
 <br>

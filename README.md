@@ -14,7 +14,8 @@ Unity 2020.3.8f1
 ## Tutorial
 https://youtu.be/-bFwu-2yyqw
 <br>
-Video was created by Robi-TheXRGuy
+[![](https://img.youtube.com/vi/-bFwu-2yyqw/0.jpg)](https://www.youtube.com/watch?v=-bFwu-2yyqw)
+<br>Video was created by Robi-TheXRGuy
 <br>
 ## Trouble Shoot
 If hand interaction doesn't work immediately after applying this profile to your project , please reboot unity editor.

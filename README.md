@@ -20,7 +20,7 @@ https://youtu.be/-bFwu-2yyqw
 <br>Video was created by Robi-TheXRGuy
 <br>
 ## Trouble Shoot
-If an application doesn't work on device, please replace AndroidManifest.xml file placed in Plugin/Android folder with following xml file.<br>
+If your application doesn't work on device, especialy on consumer version, please replace AndroidManifest.xml file placed in Plugin/Android folder with following xml file.<br>
 https://github.com/TakashiYoshinaga/MRTK-Profiles-for-NrealLight/releases/download/v0.0.6/AndroidManifest.xml
 <br><br>
 If hand interaction doesn't work immediately after applying this profile to your project , please reboot unity editor.

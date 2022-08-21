@@ -329,7 +329,10 @@ namespace Microsoft.MixedReality.Toolkit
             if (IsInitialized)
             {
                 DebugUtilities.LogVerboseFormat("Unregistered service of type {0} was an initialized service, disabling and destroying it", typeof(T));
-                serviceInstance.Disable();
+                if (activeProfile != null && Application.IsPlaying(activeProfile))
+                {
+                    serviceInstance.Disable();
+                }
                 serviceInstance.Destroy();
             }
 
@@ -1115,6 +1118,14 @@ namespace Microsoft.MixedReality.Toolkit
                 else if (typeof(IMixedRealitySpatialAwarenessSystem).IsAssignableFrom(type))
                 {
                     UnregisterService<IMixedRealitySpatialAwarenessSystem>();
+                }
+                else if (typeof(IMixedRealitySceneSystem).IsAssignableFrom(type))
+                {
+                    UnregisterService<IMixedRealitySceneSystem>();
+                }
+                else if (typeof(IMixedRealityRaycastProvider).IsAssignableFrom(type))
+                {
+                    UnregisterService<IMixedRealityRaycastProvider>();
                 }
                 else if (typeof(IMixedRealityTeleportSystem).IsAssignableFrom(type))
                 {

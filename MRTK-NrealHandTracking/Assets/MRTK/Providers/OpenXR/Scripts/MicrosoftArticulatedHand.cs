@@ -4,16 +4,10 @@
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using Microsoft.MixedReality.Toolkit.XRSDK.Input;
-using System;
-using System.Collections.Generic;
 using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.XR;
 using Handedness = Microsoft.MixedReality.Toolkit.Utilities.Handedness;
-
-#if MSFT_OPENXR && (UNITY_STANDALONE_WIN || UNITY_WSA)
-using Microsoft.MixedReality.OpenXR;
-#endif // MSFT_OPENXR && (UNITY_STANDALONE_WIN || UNITY_WSA)
 
 namespace Microsoft.MixedReality.Toolkit.XRSDK.OpenXR
 {
@@ -36,41 +30,55 @@ namespace Microsoft.MixedReality.Toolkit.XRSDK.OpenXR
             handDefinition = Definition as ArticulatedHandDefinition;
             handMeshProvider = controllerHandedness == Handedness.Left ? OpenXRHandMeshProvider.Left : OpenXRHandMeshProvider.Right;
             handMeshProvider?.SetInputSource(inputSource);
-
-#if MSFT_OPENXR && (UNITY_STANDALONE_WIN || UNITY_WSA)
-            handTracker = controllerHandedness == Handedness.Left ? HandTracker.Left : HandTracker.Right;
-#endif // MSFT_OPENXR && (UNITY_STANDALONE_WIN || UNITY_WSA)
+            handJointProvider = new OpenXRHandJointProvider(controllerHandedness);
         }
 
         private readonly ArticulatedHandDefinition handDefinition;
         private readonly OpenXRHandMeshProvider handMeshProvider;
+        private readonly OpenXRHandJointProvider handJointProvider;
 
-        protected readonly Dictionary<TrackedHandJoint, MixedRealityPose> unityJointPoses = new Dictionary<TrackedHandJoint, MixedRealityPose>();
+        protected MixedRealityPose[] unityJointPoses = null;
 
         private Vector3 currentPointerPosition = Vector3.zero;
         private Quaternion currentPointerRotation = Quaternion.identity;
         private MixedRealityPose currentPointerPose = MixedRealityPose.ZeroIdentity;
 
-#if MSFT_OPENXR && (UNITY_STANDALONE_WIN || UNITY_WSA)
-        private static readonly HandJoint[] HandJoints = Enum.GetValues(typeof(HandJoint)) as HandJoint[];
-        private readonly HandTracker handTracker = null;
-        private readonly HandJointLocation[] locations = new HandJointLocation[HandTracker.JointCount];
-#else
-        private static readonly HandFinger[] handFingers = Enum.GetValues(typeof(HandFinger)) as HandFinger[];
-        private readonly List<Bone> fingerBones = new List<Bone>();
-#endif // MSFT_OPENXR && (UNITY_STANDALONE_WIN || UNITY_WSA)
+        // The rotation offset between the reported grip pose of a hand and the palm joint orientation.
+        // These values were calculated by comparing the platform's reported grip pose and palm pose.
+        private static readonly Quaternion rightPalmOffset = Quaternion.Inverse(new Quaternion(Mathf.Sqrt(0.125f), Mathf.Sqrt(0.125f), -Mathf.Sqrt(1.5f) / 2.0f, Mathf.Sqrt(1.5f) / 2.0f));
+        private static readonly Quaternion leftPalmOffset = Quaternion.Inverse(new Quaternion(Mathf.Sqrt(0.125f), -Mathf.Sqrt(0.125f), Mathf.Sqrt(1.5f) / 2.0f, Mathf.Sqrt(1.5f) / 2.0f));
 
         #region IMixedRealityHand Implementation
 
         /// <inheritdoc/>
-        public bool TryGetJoint(TrackedHandJoint joint, out MixedRealityPose pose) => unityJointPoses.TryGetValue(joint, out pose);
+        public bool TryGetJoint(TrackedHandJoint joint, out MixedRealityPose pose)
+        {
+            if (unityJointPoses != null)
+            {
+                pose = unityJointPoses[(int)joint];
+                return pose != default(MixedRealityPose);
+            }
+
+            pose = MixedRealityPose.ZeroIdentity;
+            return false;
+        }
 
         #endregion IMixedRealityHand Implementation
 
         /// <inheritdoc/>
         public override bool IsInPointingPose => handDefinition.IsInPointingPose;
 
+        protected bool IsPinching => handDefinition.IsPinching;
+
+        // Pinch was also used as grab, we want to allow hand-curl grab not just pinch.
+        // Determine pinch and grab separately
+        protected bool IsGrabbing => handDefinition.IsGrabbing;
+
         private static readonly ProfilerMarker UpdateControllerPerfMarker = new ProfilerMarker("[MRTK] MicrosoftArticulatedHand.UpdateController");
+
+        // This bool is used to track whether or not we are receiving device data from the platform itself
+        // If we aren't we will attempt to infer some common input actions from the hand joint data (i.e. the pinch gesture, pointer positions etc)
+        private bool receivingDeviceInputs = false;
 
         /// <summary>
         /// The OpenXR plug-in uses extensions to expose all possible data, which might be surfaced through multiple input devices.
@@ -89,22 +97,90 @@ namespace Microsoft.MixedReality.Toolkit.XRSDK.OpenXR
 
             using (UpdateControllerPerfMarker.Auto())
             {
-                if (inputDevice.TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 _))
+                if (inputDevice.TryGetFeatureValue(CommonUsages.devicePosition, out _))
                 {
                     base.UpdateController(inputDevice);
-                }
-                else
-                {
-                    UpdateHandData(inputDevice);
 
+                    // We've gotten device data from the platform, don't attempt to infer other input actions
+                    // from the hand joint data
+                    receivingDeviceInputs = true;
+                }
+
+                if (inputDevice.TryGetFeatureValue(CommonUsages.handData, out Hand hand))
+                {
+                    UpdateHandData(hand);
+
+                    // Updating the Index finger pose right after getting the hand data
+                    // regardless of whether device data is present
                     for (int i = 0; i < Interactions?.Length; i++)
                     {
-                        switch (Interactions[i].AxisType)
+                        var interactionMapping = Interactions[i];
+                        switch (interactionMapping.InputType)
                         {
-                            case AxisType.SixDof:
-                                UpdatePoseData(Interactions[i], inputDevice);
+                            case DeviceInputType.IndexFinger:
+                                handDefinition?.UpdateCurrentIndexPose(interactionMapping);
                                 break;
                         }
+                    }
+
+                    // If we aren't getting device data, infer input actions, velocity, etc from hand joint data
+                    if (!receivingDeviceInputs)
+                    {
+                        for (int i = 0; i < Interactions?.Length; i++)
+                        {
+                            var interactionMapping = Interactions[i];
+                            switch (interactionMapping.InputType)
+                            {
+                                case DeviceInputType.SpatialGrip:
+                                    if (TryGetJoint(TrackedHandJoint.Palm, out MixedRealityPose currentGripPose))
+                                    {
+                                        interactionMapping.PoseData = currentGripPose;
+
+                                        if (interactionMapping.Changed)
+                                        {
+                                            CoreServices.InputSystem?.RaisePoseInputChanged(InputSource, ControllerHandedness, interactionMapping.MixedRealityInputAction, currentGripPose);
+
+                                            // Spatial Grip is also used as the basis for the source pose when device data is not provided
+                                            // We need to rotate it by an offset to properly represent the source pose.
+                                            MixedRealityPose CurrentControllerPose = currentGripPose;
+                                            CurrentControllerPose.Rotation *= (ControllerHandedness == Handedness.Left ? leftPalmOffset : rightPalmOffset);
+
+                                            CoreServices.InputSystem?.RaiseSourcePoseChanged(InputSource, this, CurrentControllerPose);
+                                            IsPositionAvailable = IsRotationAvailable = true;
+                                        }
+                                    }
+                                    break;
+                                case DeviceInputType.Select:
+                                case DeviceInputType.TriggerPress:
+                                case DeviceInputType.GripPress:
+                                    interactionMapping.BoolData = IsPinching || IsGrabbing;
+
+                                    if (interactionMapping.Changed)
+                                    {
+                                        if (interactionMapping.BoolData)
+                                        {
+                                            CoreServices.InputSystem?.RaiseOnInputDown(InputSource, ControllerHandedness, interactionMapping.MixedRealityInputAction);
+                                        }
+                                        else
+                                        {
+                                            CoreServices.InputSystem?.RaiseOnInputUp(InputSource, ControllerHandedness, interactionMapping.MixedRealityInputAction);
+                                        }
+                                    }
+                                    break;
+                                case DeviceInputType.SpatialPointer:
+                                    handDefinition?.UpdatePointerPose(interactionMapping);
+                                    break;
+                                // Gotta do this only for non-AR devices
+                                case DeviceInputType.ThumbStick:
+                                    handDefinition?.UpdateCurrentTeleportPose(interactionMapping);
+                                    break;
+                            }
+                        }
+
+                        // Update the controller velocity based on the hand definition's calculations
+                        handDefinition?.UpdateVelocity();
+                        Velocity = (handDefinition?.Velocity).Value;
+                        AngularVelocity = (handDefinition?.AngularVelocity).Value;
                     }
                 }
             }
@@ -202,9 +278,6 @@ namespace Microsoft.MixedReality.Toolkit.XRSDK.OpenXR
             {
                 switch (interactionMapping.InputType)
                 {
-                    case DeviceInputType.IndexFinger:
-                        handDefinition?.UpdateCurrentIndexPose(interactionMapping);
-                        break;
                     case DeviceInputType.SpatialPointer:
                         if (inputDevice.TryGetFeatureValue(CustomUsages.PointerPosition, out currentPointerPosition))
                         {
@@ -225,6 +298,9 @@ namespace Microsoft.MixedReality.Toolkit.XRSDK.OpenXR
                             CoreServices.InputSystem?.RaisePoseInputChanged(InputSource, ControllerHandedness, interactionMapping.MixedRealityInputAction, interactionMapping.PoseData);
                         }
                         break;
+                    // IndexFinger is handled in ArticulatedHandDefinition, so we can safely skip this case.
+                    case DeviceInputType.IndexFinger:
+                        break;
                     default:
                         base.UpdatePoseData(interactionMapping, inputDevice);
                         break;
@@ -238,130 +314,14 @@ namespace Microsoft.MixedReality.Toolkit.XRSDK.OpenXR
         /// Update the hand data from the device.
         /// </summary>
         /// <param name="interactionSourceState">The InteractionSourceState retrieved from the platform.</param>
-        private void UpdateHandData(InputDevice inputDevice)
+        private void UpdateHandData(Hand hand)
         {
             using (UpdateHandDataPerfMarker.Auto())
             {
                 handMeshProvider?.UpdateHandMesh();
-
-#if MSFT_OPENXR && (UNITY_STANDALONE_WIN || UNITY_WSA)
-                if (handTracker != null && handTracker.TryLocateHandJoints(FrameTime.OnUpdate, locations))
-                {
-                    foreach (HandJoint handJoint in HandJoints)
-                    {
-                        HandJointLocation handJointLocation = locations[(int)handJoint];
-
-                        // We want input sources to follow the playspace, so fold in the playspace transform here to
-                        // put the pose into world space.
-                        Vector3 position = MixedRealityPlayspace.TransformPoint(handJointLocation.Pose.position);
-                        Quaternion rotation = MixedRealityPlayspace.Rotation * handJointLocation.Pose.rotation;
-
-                        unityJointPoses[ConvertToTrackedHandJoint(handJoint)] = new MixedRealityPose(position, rotation);
-                    }
-#else
-                if (inputDevice.TryGetFeatureValue(CommonUsages.handData, out Hand hand))
-                {
-                    foreach (HandFinger finger in handFingers)
-                    {
-                        if (hand.TryGetRootBone(out Bone rootBone))
-                        {
-                            ReadHandJoint(TrackedHandJoint.Wrist, rootBone);
-                        }
-
-                        if (hand.TryGetFingerBones(finger, fingerBones))
-                        {
-                            for (int i = 0; i < fingerBones.Count; i++)
-                            {
-                                ReadHandJoint(ConvertToTrackedHandJoint(finger, i), fingerBones[i]);
-                            }
-                        }
-                    }
-#endif // MSFT_OPENXR && (UNITY_STANDALONE_WIN || UNITY_WSA)
-
-                    handDefinition?.UpdateHandJoints(unityJointPoses);
-                }
+                handJointProvider?.UpdateHandJoints(hand, ref unityJointPoses);
+                handDefinition?.UpdateHandJoints(unityJointPoses);
             }
         }
-
-#if MSFT_OPENXR && (UNITY_STANDALONE_WIN || UNITY_WSA)
-        private TrackedHandJoint ConvertToTrackedHandJoint(HandJoint handJoint)
-        {
-            switch (handJoint)
-            {
-                case HandJoint.Palm: return TrackedHandJoint.Palm;
-                case HandJoint.Wrist: return TrackedHandJoint.Wrist;
-
-                case HandJoint.ThumbMetacarpal: return TrackedHandJoint.ThumbMetacarpalJoint;
-                case HandJoint.ThumbProximal: return TrackedHandJoint.ThumbProximalJoint;
-                case HandJoint.ThumbDistal: return TrackedHandJoint.ThumbDistalJoint;
-                case HandJoint.ThumbTip: return TrackedHandJoint.ThumbTip;
-
-                case HandJoint.IndexMetacarpal: return TrackedHandJoint.IndexMetacarpal;
-                case HandJoint.IndexProximal: return TrackedHandJoint.IndexKnuckle;
-                case HandJoint.IndexIntermediate: return TrackedHandJoint.IndexMiddleJoint;
-                case HandJoint.IndexDistal: return TrackedHandJoint.IndexDistalJoint;
-                case HandJoint.IndexTip: return TrackedHandJoint.IndexTip;
-
-                case HandJoint.MiddleMetacarpal: return TrackedHandJoint.MiddleMetacarpal;
-                case HandJoint.MiddleProximal: return TrackedHandJoint.MiddleKnuckle;
-                case HandJoint.MiddleIntermediate: return TrackedHandJoint.MiddleMiddleJoint;
-                case HandJoint.MiddleDistal: return TrackedHandJoint.MiddleDistalJoint;
-                case HandJoint.MiddleTip: return TrackedHandJoint.MiddleTip;
-
-                case HandJoint.RingMetacarpal: return TrackedHandJoint.RingMetacarpal;
-                case HandJoint.RingProximal: return TrackedHandJoint.RingKnuckle;
-                case HandJoint.RingIntermediate: return TrackedHandJoint.RingMiddleJoint;
-                case HandJoint.RingDistal: return TrackedHandJoint.RingDistalJoint;
-                case HandJoint.RingTip: return TrackedHandJoint.RingTip;
-
-                case HandJoint.LittleMetacarpal: return TrackedHandJoint.PinkyMetacarpal;
-                case HandJoint.LittleProximal: return TrackedHandJoint.PinkyKnuckle;
-                case HandJoint.LittleIntermediate: return TrackedHandJoint.PinkyMiddleJoint;
-                case HandJoint.LittleDistal: return TrackedHandJoint.PinkyDistalJoint;
-                case HandJoint.LittleTip: return TrackedHandJoint.PinkyTip;
-
-                default: return TrackedHandJoint.None;
-            }
-        }
-#else
-        private void ReadHandJoint(TrackedHandJoint trackedHandJoint, Bone bone)
-        {
-            bool positionAvailable = bone.TryGetPosition(out Vector3 position);
-            bool rotationAvailable = bone.TryGetRotation(out Quaternion rotation);
-
-            if (positionAvailable && rotationAvailable)
-            {
-                // We want input sources to follow the playspace, so fold in the playspace transform here to
-                // put the pose into world space.
-                position = MixedRealityPlayspace.TransformPoint(position);
-                rotation = MixedRealityPlayspace.Rotation * rotation;
-
-                unityJointPoses[trackedHandJoint] = new MixedRealityPose(position, rotation);
-            }
-        }
-
-        /// <summary>
-        /// Converts a Unity finger bone into an MRTK hand joint.
-        /// </summary>
-        /// <remarks>
-        /// For HoloLens 2, Unity provides four joints for the thumb and five joints for other fingers, in index order of metacarpal (0) to tip (4).
-        /// The wrist joint is provided as the hand root bone.
-        /// </remarks>
-        /// <param name="finger">The Unity classification of the current finger.</param>
-        /// <param name="index">The Unity index of the current finger bone.</param>
-        /// <returns>The current Unity finger bone converted into an MRTK joint.</returns>
-        private TrackedHandJoint ConvertToTrackedHandJoint(HandFinger finger, int index)
-        {
-            switch (finger)
-            {
-                case HandFinger.Thumb: return TrackedHandJoint.ThumbMetacarpalJoint + index;
-                case HandFinger.Index: return TrackedHandJoint.IndexMetacarpal + index;
-                case HandFinger.Middle: return TrackedHandJoint.MiddleMetacarpal + index;
-                case HandFinger.Ring: return TrackedHandJoint.RingMetacarpal + index;
-                case HandFinger.Pinky: return TrackedHandJoint.PinkyMetacarpal + index;
-                default: return TrackedHandJoint.None;
-            }
-        }
-#endif // MSFT_OPENXR && (UNITY_STANDALONE_WIN || UNITY_WSA)
     }
 }

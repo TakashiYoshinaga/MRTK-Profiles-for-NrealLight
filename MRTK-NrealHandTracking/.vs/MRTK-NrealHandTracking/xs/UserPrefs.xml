@@ -1,0 +1,33 @@
+﻿<Properties StartupConfiguration="{EB98AB52-D324-A3C2-6580-00B04C50DCE5}|">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/MRTK/Providers/WindowsMixedReality/XRSDK/WindowsMixedRealityDeviceManager.cs">
+    <Files>
+      <File FileName="Assets/MRTK/Providers/WindowsMixedReality/XRSDK/WindowsMixedRealityDeviceManager.cs" Line="404" Column="97" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="MRTK-NrealHandTracking" expanded="True">
+            <Node name="Assets" expanded="True">
+              <Node name="MRTK" expanded="True">
+                <Node name="Providers" expanded="True">
+                  <Node name="WindowsMixedReality" expanded="True">
+                    <Node name="XRSDK" expanded="True">
+                      <Node name="WindowsMixedRealityDeviceManager.cs" selected="True" />
+                    </Node>
+                  </Node>
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="9e091783-46f9-4f1d-b1f0-aa6fcc2d49c7" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>

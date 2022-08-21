@@ -51,6 +51,19 @@ namespace Microsoft.MixedReality.Toolkit.UI.BoundsControl
                     b.Encapsulate(currentMesh.bounds);
                 }
             }
+            foreach (SkinnedMeshRenderer r in g.GetComponentsInChildren<SkinnedMeshRenderer>())
+            {
+                if ((currentMesh = r.sharedMesh) == null) { continue; }
+
+                if (b.size == Vector3.zero)
+                {
+                    b = currentMesh.bounds;
+                }
+                else
+                {
+                    b.Encapsulate(currentMesh.bounds);
+                }
+            }
             return b;
         }
 
@@ -264,7 +277,7 @@ namespace Microsoft.MixedReality.Toolkit.UI.BoundsControl
         {
             Debug.Assert(flattenAxis != FlattenModeType.FlattenAuto,
                          "FlattenAuto passed to GetFlattenedIndices. Resolve FlattenAuto into an actual axis before calling.");
-                         
+
             List<int> flattenedIndices = new List<int>();
             for (int i = 0; i < axisArray.Length; ++i)
             {

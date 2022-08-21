@@ -574,10 +574,11 @@ namespace Microsoft.MixedReality.Toolkit.UI.BoundsControl
         public Vector3[] BoundsCorners { get; private set; }
 
         // Current actual flattening axis, derived from FlattenAuto, if set
-        private FlattenModeType ActualFlattenAxis {
+        private FlattenModeType ActualFlattenAxis
+        {
             get
             {
-                if(FlattenAxis == FlattenModeType.FlattenAuto)
+                if (FlattenAxis == FlattenModeType.FlattenAuto)
                 {
                     return VisualUtils.DetermineAxisToFlatten(TargetBounds.bounds.extents);
                 }
@@ -949,9 +950,14 @@ namespace Microsoft.MixedReality.Toolkit.UI.BoundsControl
             if (boundsCalculationMethod != BoundsCalculationMethod.ColliderOnly)
             {
                 MeshFilter meshFilter = childTransform.GetComponent<MeshFilter>();
+                SkinnedMeshRenderer skinnedMeshRenderer = childTransform.GetComponent<SkinnedMeshRenderer>();
                 if (meshFilter != null && meshFilter.sharedMesh != null)
                 {
                     rendererBoundsByTransform = new KeyValuePair<Transform, Bounds>(childTransform, meshFilter.sharedMesh.bounds);
+                }
+                else if (skinnedMeshRenderer != null && skinnedMeshRenderer.sharedMesh != null)
+                {
+                    rendererBoundsByTransform = new KeyValuePair<Transform, Bounds>(childTransform, skinnedMeshRenderer.sharedMesh.bounds);
                 }
                 else
                 {

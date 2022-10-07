@@ -14,6 +14,12 @@ using UnityEngine;
 
 namespace NRKernal.NRExamples
 {
+#if UNITY_ANDROID && !UNITY_EDITOR
+    using GalleryDataProvider = NativeGalleryDataProvider;
+#else
+    using GalleryDataProvider = MockGalleryDataProvider;
+#endif
+
     /// <summary> A photo capture example. </summary>
     [HelpURL("https://developer.nreal.ai/develop/unity/video-capture")]
     public class PhotoCaptureExample : MonoBehaviour
@@ -23,6 +29,7 @@ namespace NRKernal.NRExamples
         /// <summary> The camera resolution. </summary>
         private Resolution m_CameraResolution;
         private bool isOnPhotoProcess = false;
+        GalleryDataProvider galleryDataTool;
 
         void Update()
         {
@@ -123,6 +130,7 @@ namespace NRKernal.NRExamples
             quad.transform.localScale = new Vector3(1.6f, 0.9f, 0);
             quadRenderer.material.SetTexture("_MainTex", targetTexture);
 
+            SaveTextureToGallery(targetTexture);
             // Release camera resource after capture the photo.
             this.Close();
         }
@@ -155,6 +163,27 @@ namespace NRKernal.NRExamples
             // Shutdown our photo capture resource
             m_PhotoCaptureObject?.Dispose();
             m_PhotoCaptureObject = null;
+        }
+
+        public void SaveTextureToGallery(Texture2D _texture)
+        {
+            try
+            {
+                string filename = string.Format("Nreal_Shot_{0}.png", NRTools.GetTimeStamp().ToString());
+                byte[] _bytes = _texture.EncodeToPNG();
+                NRDebugger.Info(_bytes.Length / 1024 + "Kb was saved as: " + filename);
+                if (galleryDataTool == null)
+                {
+                    galleryDataTool = new GalleryDataProvider();
+                }
+
+                galleryDataTool.InsertImage(_bytes, filename, "Screenshots");
+            }
+            catch (Exception e)
+            {
+                NRDebugger.Error("[TakePicture] Save picture faild!");
+                throw e;
+            }
         }
     }
 }

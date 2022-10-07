@@ -34,6 +34,21 @@ namespace NRKernal.NRExamples
         /// <summary> Duration of system gesture to trigger function. </summary>
         private const float SYSTEM_GESTURE_KEEP_DURATION = 1.2f;
 
+        private static AndroidJavaObject currentActivity;
+        public static AndroidJavaObject CurrentActivity
+        {
+            get
+            {
+                if (currentActivity == null)
+                {
+                    currentActivity = new AndroidJavaClass("com.unity3d.player.UnityPlayer").GetStatic<AndroidJavaObject>("currentActivity");
+                }
+                return currentActivity;
+
+            }
+
+        }
+
         /// <summary> Executes the 'enable' action. </summary>
         private void OnEnable()
         {
@@ -118,8 +133,25 @@ namespace NRKernal.NRExamples
         }
 
         /// <summary> Quit application. </summary>
-        public static void QuitApplication()
+        public static void QuitApplication(bool backToMRSpace = false)
         {
+            if (backToMRSpace)
+            {
+                NRDebugger.Info("QuitApplication backToMRSpace");
+                if (Application.platform == RuntimePlatform.Android)
+                {
+                    // 这个Action会启动Nebula Space
+                    string action = "ai.nreal.nebula.start.MRAPP";
+                    AndroidJavaObject intent = new AndroidJavaObject("android.content.Intent");
+                    intent.Call<AndroidJavaObject>("setAction", action);
+                    intent.Call<AndroidJavaObject>("addFlags", 0x10000000);
+                    // 优先级最高
+                    intent.Call<AndroidJavaObject>("putExtra", "backToMRSpace", true);
+                    CurrentActivity.Call("startActivity", intent);
+                }
+            }
+
+            NRDebugger.Info("QuitApplication QuitApp");
             NRDevice.QuitApp();
         }
     }

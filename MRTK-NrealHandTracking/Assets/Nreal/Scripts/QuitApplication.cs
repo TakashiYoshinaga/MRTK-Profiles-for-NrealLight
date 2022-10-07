@@ -5,13 +5,14 @@
 using System.Collections;
 using UnityEngine;
 using Microsoft.MixedReality.Toolkit.Input;
+using NRKernal;
 
 public class QuitApplication : MonoBehaviour
 {
     [SerializeField]
-    GameObject NRHandPointer_R;
+    NRHandPointer NRHandPointer_R;
     [SerializeField]
-    GameObject NRHandPointer_L;
+    NRHandPointer NRHandPointer_L;
 
     public void QuitApp()
     {
@@ -29,22 +30,22 @@ public class QuitApplication : MonoBehaviour
             NRKernal.NRExamples.NRHomeMenu.OnHomeMenuShow += new System.Action(() => {
                 if (NRHandPointer_R != null)
                 {
-                    NRHandPointer_R.SetActive(true);
+                    NRHandPointer_R.gameObject.SetActive(true);
                 }
                 if (NRHandPointer_L != null)
                 {
-                    NRHandPointer_L.SetActive(true);
+                    NRHandPointer_L.gameObject.SetActive(true);
                 }
                 PointerUtils.SetHandRayPointerBehavior(PointerBehavior.AlwaysOff);
             });
             NRKernal.NRExamples.NRHomeMenu.OnHomeMenuHide += new System.Action(() => {
                 if (NRHandPointer_R != null)
                 {
-                    NRHandPointer_R.SetActive(false);
+                    NRHandPointer_R.gameObject.SetActive(false);
                 }
                 if (NRHandPointer_L != null)
                 {
-                    NRHandPointer_L.SetActive(false);
+                    NRHandPointer_L.gameObject.SetActive(false);
                 }
                 PointerUtils.SetHandRayPointerBehavior(PointerBehavior.AlwaysOn);
 

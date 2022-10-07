@@ -202,7 +202,7 @@ namespace NRKernal.Record
             
             bool recordMic = setupParams.CaptureAudioMic;
             bool recordApp = setupParams.CaptureAudioApplication;            
-            if (recordMic && recordApp)
+            if (recordApp)
             {
                 NRAndroidPermissionsManager.GetInstance().RequestAndroidPermission("android.permission.RECORD_AUDIO").ThenAction((requestResult) =>
                 {
@@ -248,25 +248,6 @@ namespace NRKernal.Record
                         result.resultType = CaptureResultType.UnknownError;
                         onVideoModeStartedCallback?.Invoke(result);
                         NRSessionManager.Instance.OprateInitException(new NRPermissionDenyError(NativeConstants.AudioPermissionDenyErrorTip));
-                    }
-                });
-            }
-            else if (recordApp)
-            {
-                NRAndroidPermissionsManager.GetInstance().RequestScreenCapture().ThenAction((AndroidJavaObject mediaProjection) => 
-                {
-                    if (mediaProjection != null)
-                    {
-                        setupParams.mediaProjection = mediaProjection;
-                        StartVideoMode(setupParams, onVideoModeStartedCallback);
-                    }
-                    else
-                    {
-                        NRDebugger.Error("[VideoCapture] Screen capture is denied by user.");
-                        var result = new VideoCaptureResult();
-                        result.resultType = CaptureResultType.UnknownError;
-                        onVideoModeStartedCallback?.Invoke(result);
-                        NRSessionManager.Instance.OprateInitException(new NRPermissionDenyError(NativeConstants.ScreenCaptureDenyErrorTip));
                     }
                 });
             }

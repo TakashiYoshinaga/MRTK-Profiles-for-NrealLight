@@ -14,7 +14,7 @@ I have tested the combination of following SDKs in my environment. Other combina
 These SDK must be installed before hand.<br>
 (1) NRSDK Unity SDK 1.9.5<br>
 https://developer.nreal.ai/download
-<br>
+<br><br>
 (2) MRTK-Unity v2.8.2<br>
 https://github.com/microsoft/MixedRealityToolkit-Unity/releases/tag/v2.8.2
 <br>

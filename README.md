@@ -8,9 +8,7 @@ https://developer.nreal.ai/download
 (2) MRTK-Unity v2.8.2<br>
 https://github.com/microsoft/MixedRealityToolkit-Unity/releases/tag/v2.8.2
 <br>
-*Both Foundation and Examples are required if you want to try demo scene.
-<br>
-*You don't need to download & install MRTK if you start development with the project of this repository.
+*You don't need to download & install MRTK if you start development with the Unity project of this repository.
 <br>
 ## Version of Unity
 Unity 2020.3.39f1

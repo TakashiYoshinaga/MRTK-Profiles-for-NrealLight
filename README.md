@@ -2,7 +2,7 @@
  
 ## Dependencies:
 These SDK must be installed before hand.<br>
-(1) NRSDK Unity SDK 1.9.3<br>
+(1) NRSDK Unity SDK 1.9.5<br>
 https://developer.nreal.ai/download
 <br>
 (2) MRTK-Unity v2.8.2<br>
@@ -13,7 +13,7 @@ https://github.com/microsoft/MixedRealityToolkit-Unity/releases/tag/v2.8.2
 *You don't need to download & install MRTK if you start development with the project of this repository.
 <br>
 ## Version of Unity
-Unity 2020.3.25f1
+Unity 2020.3.39f1
 <br>
 ## Tutorial
 https://youtu.be/-bFwu-2yyqw

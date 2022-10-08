@@ -10,7 +10,7 @@ It's uity package including MRTK profiles, scripts and prefabs to use hand track
 Please install it into your own Uity project if you make hand tracking work MRTK. (See dependency.)<br>
 
 ## Dependencies:
-I have tested the combination of following SDKs in my environment. Other combinations probably work as well.<br>
+I have tested the combination of following SDKs in my environment but other combinations probably work as well.<br>
 These SDK must be installed before hand.<br><br>
 (1) NRSDK Unity SDK 1.9.5<br>
 https://developer.nreal.ai/download

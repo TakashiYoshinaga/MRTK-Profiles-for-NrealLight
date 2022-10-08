@@ -1,11 +1,11 @@
 # MRTK-Profiles-for-NrealLight
 
 ## What's Included
-MRTK-NrealHandTracking: <br>
+<u>MRTK-NrealHandTracking:</u> <br>
 It's unity project to try hand tracking and MRTK together without installation of NRSDK and MRTK by yourself. <br>
-DemoAPK: <br>
+<u>DemoAPK:</u> <br>
 It's installer of demo application to trya hand tracking feature. Just install the app to try this out! <br>
-UnityPackage: <br>
+<u>UnityPackage:</u> <br>
 It's uity package including MRTK profiles, scripts and prefabs to use hand tracking and MRTK. <br>
 Please install it into your own Uity project if you make hand tracking work MRTK. (See dependency.)<br>
 

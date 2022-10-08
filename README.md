@@ -21,6 +21,12 @@ https://youtu.be/-bFwu-2yyqw
 [![](https://img.youtube.com/vi/-bFwu-2yyqw/0.jpg)](https://www.youtube.com/watch?v=-bFwu-2yyqw)
 <br>Video was created by Robi-TheXRGuy
 <br>
+<br>
+<b>Notice!!</b><br>
+Please use following prefabs instead of NRealInput and NRealCameraRig.<br>
+・NRInput_MRTK<br>
+・NRCameraRig_MRTK<br>
+<br>
 ## Trouble Shoot
 If your application doesn't work on device, especialy on consumer version, please replace AndroidManifest.xml file placed in Plugin/Android folder with following xml file.<br>
 https://github.com/TakashiYoshinaga/MRTK-Profiles-for-NrealLight/releases/download/v0.0.6/AndroidManifest.xml

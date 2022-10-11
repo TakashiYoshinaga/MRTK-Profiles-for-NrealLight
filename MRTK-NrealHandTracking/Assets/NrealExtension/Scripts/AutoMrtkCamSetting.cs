@@ -13,18 +13,19 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
             var cam=gameObject.GetComponent<Camera>();
             if(cam!=null)
             {
+              
+#if UNITY_EDITOR
                 cam.clearFlags=CameraClearFlags.SolidColor;
                 cam.fieldOfView=25;
-#if UNITY_EDITOR
                 cam.depth=1;
+                StartCoroutine(FindNREmulatorCameraTarget());
 #else
                 cam.depth=-1;
 #endif
             }
-            StartCoroutine(FindNREmulatorCameraTarget());
         }
         IEnumerator FindNREmulatorCameraTarget(){
-            yield return new WaitForSeconds(1);
+            yield return null;
             if (m_CameraTarget == null)
             {
                 m_CameraTarget = GameObject.Find("NREmulatorCameraTarget");

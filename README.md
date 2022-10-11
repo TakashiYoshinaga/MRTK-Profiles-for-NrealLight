@@ -7,7 +7,7 @@ Unity project to try hand tracking and MRTK together without installation of NRS
 nstaller of demo application to trya hand tracking feature. Just install the app to try this out! <br> <br>
 <b>UnityPackage:</b> <br>
 Uity package including MRTK profiles, scripts and prefabs to use hand tracking and MRTK. <br>
-Please install it into your own Uity project if you make hand tracking work MRTK. (See dependency.)<br>
+Please install it into your own Uity project if you make hand tracking feature work with MRTK. (See dependency.)<br>
 
 ## Dependencies:
 I have tested the combination of following SDKs in my environment but other combinations probably work as well.<br>

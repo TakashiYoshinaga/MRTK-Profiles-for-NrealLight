@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Microsoft.MixedReality.Toolkit.Input;
 using UnityEngine;
 namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
 {
@@ -7,6 +8,7 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
     {
         GameObject m_CameraTarget;
         public float HeadMoveSpeed = 1.0f;
+        public bool EnableGazePointer=false;
         // Start is called before the first frame update
         void Start()
         {
@@ -22,6 +24,9 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
 #else
                 cam.depth=-1;
 #endif
+                if(EnableGazePointer){
+                    PointerUtils.SetGazePointerBehavior(PointerBehavior.AlwaysOn); 
+                }
             }
         }
         IEnumerator FindNREmulatorCameraTarget(){
@@ -30,6 +35,7 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
             {
                 m_CameraTarget = GameObject.Find("NREmulatorCameraTarget");
             }
+           
         }
 
 #if UNITY_EDITOR
@@ -48,11 +54,11 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
             Vector3 p_Velocity = new Vector3();
             if (UnityEngine.Input.GetKey(KeyCode.Q))
             {
-                p_Velocity += m_CameraTarget.transform.up.normalized;
+                p_Velocity -= m_CameraTarget.transform.up.normalized;
             }
             if (UnityEngine.Input.GetKey(KeyCode.E))
             {
-                p_Velocity += -m_CameraTarget.transform.up.normalized;
+                p_Velocity += m_CameraTarget.transform.up.normalized;
             }
            
             return p_Velocity;

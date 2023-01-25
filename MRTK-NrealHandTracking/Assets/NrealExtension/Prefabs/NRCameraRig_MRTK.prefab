@@ -127,6 +127,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   HeadMoveSpeed: 1
+  EnableGazePointer: 1
+  CursorPositionOffset: {x: 0, y: -0.23, z: 0}
 --- !u!1 &4279637314102979954
 GameObject:
   m_ObjectHideFlags: 0

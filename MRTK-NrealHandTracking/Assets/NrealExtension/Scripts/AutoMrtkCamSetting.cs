@@ -7,8 +7,12 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
     public class AutoMrtkCamSetting : MonoBehaviour
     {
         GameObject m_CameraTarget;
-        public float HeadMoveSpeed = 1.0f;
-        public bool EnableGazePointer=false;
+        [SerializeField]
+        float HeadMoveSpeed = 1.0f;
+        [SerializeField]
+        bool EnableGazePointer=true;
+        [SerializeField]
+        Vector3 CursorPositionOffset;
         // Start is called before the first frame update
         void Start()
         {
@@ -23,9 +27,12 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
                 StartCoroutine(FindNREmulatorCameraTarget());
 #else
                 cam.depth=-1;
+                gameObject.transform.localPosition=CursorPositionOffset;
 #endif
                 if(EnableGazePointer){
                     PointerUtils.SetGazePointerBehavior(PointerBehavior.AlwaysOn); 
+                }else{
+                    PointerUtils.SetGazePointerBehavior(PointerBehavior.AlwaysOff); 
                 }
             }
         }

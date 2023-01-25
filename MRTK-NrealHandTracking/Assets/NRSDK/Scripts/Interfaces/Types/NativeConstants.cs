@@ -90,7 +90,7 @@ namespace NRKernal
         public const int NRSESSIONBEHAVIOUR_ORDER = -100;
         public const int NRVIRTUALDISPLAY_ORDER = -200;
         public const int NRRENDER_ORDER = -300;
-        public const int NRKERNALUPDATER_ORDER = -1000;
+        public const int NRKERNALUPDATER_ORDER = -1100;
         #endregion
 
         #region settings

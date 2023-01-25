@@ -9,6 +9,7 @@
 
 using NRKernal.Record;
 using System;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 
@@ -129,10 +130,35 @@ namespace NRKernal.NRExamples
             quad.transform.forward = headTran.forward;
             quad.transform.localScale = new Vector3(1.6f, 0.9f, 0);
             quadRenderer.material.SetTexture("_MainTex", targetTexture);
+            SaveTextureAsPNG(targetTexture);
 
             SaveTextureToGallery(targetTexture);
             // Release camera resource after capture the photo.
             this.Close();
+        }
+
+        void SaveTextureAsPNG(Texture2D _texture)
+        {
+            try
+            {
+                string filename = string.Format("Nreal_Shot_{0}.png", NRTools.GetTimeStamp().ToString());
+                string path = string.Format("{0}/NrealShots", Application.persistentDataPath);
+                string filePath = string.Format("{0}/{1}", path, filename);
+
+                byte[] _bytes = _texture.EncodeToPNG();
+                NRDebugger.Info("Photo capture: {0}Kb was saved to [{1}]",  _bytes.Length / 1024, filePath);
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+                File.WriteAllBytes(string.Format("{0}/{1}", path, filename), _bytes);
+
+            }
+            catch (Exception e)
+            {
+                NRDebugger.Error("Save picture faild!");
+                throw e;
+            }
         }
 
         /// <summary> Closes this object. </summary>

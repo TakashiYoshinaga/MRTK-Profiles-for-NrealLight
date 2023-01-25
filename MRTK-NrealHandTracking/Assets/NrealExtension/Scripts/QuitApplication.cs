@@ -27,7 +27,7 @@ public class QuitApplication : MonoBehaviour
     private void Start()
     {
         
-            NRKernal.NRExamples.NRHomeMenu.OnHomeMenuShow += new System.Action(() => {
+            NRKernal.NRHomeMenu.OnHomeMenuShow += new System.Action(() => {
                 if (NRHandPointer_R != null)
                 {
                     NRHandPointer_R.gameObject.SetActive(true);
@@ -38,7 +38,7 @@ public class QuitApplication : MonoBehaviour
                 }
                 PointerUtils.SetHandRayPointerBehavior(PointerBehavior.AlwaysOff);
             });
-            NRKernal.NRExamples.NRHomeMenu.OnHomeMenuHide += new System.Action(() => {
+            NRKernal.NRHomeMenu.OnHomeMenuHide += new System.Action(() => {
                 if (NRHandPointer_R != null)
                 {
                     NRHandPointer_R.gameObject.SetActive(false);
@@ -56,6 +56,6 @@ public class QuitApplication : MonoBehaviour
     IEnumerator Test()
     {
         yield return new WaitForSeconds(5);
-        NRKernal.NRExamples.NRHomeMenu.Show();
+        NRKernal.NRHomeMenu.Show();
     }
 }

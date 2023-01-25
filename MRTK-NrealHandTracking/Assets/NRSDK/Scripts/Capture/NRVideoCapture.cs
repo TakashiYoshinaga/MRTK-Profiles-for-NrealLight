@@ -200,8 +200,9 @@ namespace NRKernal.Record
                 return;
             }
             
+            NRDebugger.Info("[VideoCapture] StartVideoModeAsync: audioState={0}, blendMode={1}", setupParams.audioState, setupParams.blendMode);
             bool recordMic = setupParams.CaptureAudioMic;
-            bool recordApp = setupParams.CaptureAudioApplication;            
+            bool recordApp = setupParams.CaptureAudioApplication;
             if (recordApp)
             {
                 NRAndroidPermissionsManager.GetInstance().RequestAndroidPermission("android.permission.RECORD_AUDIO").ThenAction((requestResult) =>

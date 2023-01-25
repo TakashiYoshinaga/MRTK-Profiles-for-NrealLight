@@ -9,12 +9,12 @@
 
 using UnityEngine;
 
-namespace NRKernal.NRExamples
+namespace NRKernal
 {
     /// <summary> Manager for applications. </summary>
     [DisallowMultipleComponent]
     [HelpURL("https://developer.nreal.ai/develop/discover/introduction-nrsdk")]
-    public class AppManager : MonoBehaviour
+    public class NRAppManager : MonoBehaviour
     {
         /// <summary>
         /// If enable this, quick click app button for three times, a profiler bar would show. </summary>

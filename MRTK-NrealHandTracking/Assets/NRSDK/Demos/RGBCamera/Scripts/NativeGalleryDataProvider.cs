@@ -12,7 +12,7 @@ namespace NRKernal.NRExamples
             get
             {
                 if (m_NativeClass == null)
-                    m_NativeClass = new AndroidJavaClass("ai.nreal.android.nebulaspaceproxy.gallery.GalleryDataProvider");
+                    m_NativeClass = new AndroidJavaClass("ai.nreal.android.gallery.GalleryDataProvider");
                 return m_NativeClass;
             }
         }
@@ -39,7 +39,7 @@ namespace NRKernal.NRExamples
 
         public NativeGalleryDataProvider()
         {
-            m_NativeObject = new AndroidJavaObject("ai.nreal.android.nebulaspaceproxy.gallery.GalleryDataProvider",
+            m_NativeObject = new AndroidJavaObject("ai.nreal.android.gallery.GalleryDataProvider",
                                                    CurrentActivity);
         }
 

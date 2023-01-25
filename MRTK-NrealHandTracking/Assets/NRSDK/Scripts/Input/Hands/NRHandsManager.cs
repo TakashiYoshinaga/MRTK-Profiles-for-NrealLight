@@ -14,10 +14,11 @@ namespace NRKernal
     using UnityEngine;
 
     /// <summary> A manager of hand states. </summary>
-    public class HandsManager
+    public class NRHandsManager
     {
         private readonly Dictionary<HandEnum, NRHand> m_HandsDict;
         private readonly HandState[] m_HandStates; // index 0 represents right and index 1 represents left
+        private readonly OneEuroFilter[] m_OneEuroFilters;
         private IHandStatesService m_HandStatesService;
         private bool m_Inited;
 
@@ -40,10 +41,11 @@ namespace NRKernal
             }
         }
 
-        public HandsManager()
+        public NRHandsManager()
         {
             m_HandsDict = new Dictionary<HandEnum, NRHand>();
             m_HandStates = new HandState[2] { new HandState(HandEnum.RightHand), new HandState(HandEnum.LeftHand) };
+            m_OneEuroFilters = new OneEuroFilter[2] { new OneEuroFilter(), new OneEuroFilter() };
         }
 
         /// <summary>
@@ -124,7 +126,7 @@ namespace NRKernal
                 OnHandTrackingStarted?.Invoke();
                 return true;
             }
-            
+
             NRDebugger.Info("[HandsManager] Hand Tracking Start: Failed");
             return false;
         }
@@ -237,31 +239,40 @@ namespace NRKernal
                 if (handState == null)
                     continue;
 
-                CaculatePointerPose(handState);
-                CaculatePinchState(handState);
+                CalculatePointerPose(handState);
             }
         }
 
-        private void CaculatePointerPose(HandState handState)
+        private void CalculatePointerPose(HandState handState)
         {
             if (handState.isTracked)
             {
-                var palmPose = handState.GetJointPose(HandJointID.Palm);
+                var wristPose = handState.GetJointPose(HandJointID.Wrist);
                 var cameraTransform = NRInput.CameraCenter;
-                handState.pointerPoseValid = Vector3.Angle(cameraTransform.forward, palmPose.forward) < 70f;
+                handState.pointerPoseValid = Vector3.Angle(cameraTransform.forward, wristPose.forward) < 70f;
 
                 if (handState.pointerPoseValid)
                 {
-                    var cameraWorldUp = NRFrame.GetWorldMatrixFromUnityToNative().MultiplyVector(Vector3.up).normalized;
-                    var rayEndPoint = palmPose.position;
-                    var right = Vector3.Cross(rayEndPoint - cameraTransform.position, cameraWorldUp).normalized;
-                    var horizontalVec = right * (handState.handEnum == HandEnum.RightHand ? -1f : 1f);
-                    var rayStartPoint = cameraTransform.position + horizontalVec * 0.14f - cameraWorldUp * 0.16f;
+                    Vector3 middleToRing = (handState.GetJointPose(HandJointID.MiddleProximal).position
+                                          - handState.GetJointPose(HandJointID.RingProximal).position).normalized;
+                    Vector3 middleToWrist = (handState.GetJointPose(HandJointID.MiddleProximal).position
+                                           - handState.GetJointPose(HandJointID.Wrist).position).normalized;
+                    Vector3 middleToCenter = Vector3.Cross(middleToWrist, middleToRing).normalized;
+                    var pointerPosition = handState.GetJointPose(HandJointID.MiddleProximal).position
+                                        + middleToWrist * 0.02f
+                                        + middleToRing * 0.01f
+                                        + middleToCenter * (handState.handEnum == HandEnum.RightHand ? 0.06f : -0.06f);
 
-                    var foward = (rayEndPoint - rayStartPoint).normalized;
-                    var upwards = Vector3.Cross(right, foward);
-                    var pointerRotation = Quaternion.LookRotation(foward, upwards);
-                    var pointerPosition = rayEndPoint + cameraWorldUp * 0.01f + foward * 0.06f - horizontalVec * 0.03f;
+                    var handDirection = pointerPosition - wristPose.position;
+                    var handRotation = Quaternion.LookRotation(handDirection);
+                    var handtoCamera = wristPose.position - (cameraTransform.position - 0.08f * cameraTransform.forward);
+                    float handtoCameraY = handtoCamera.y;
+                    handtoCamera.y = 0;
+                    var handtoCameraRot = Quaternion.LookRotation(handtoCamera);
+                    var pointerRotation = Quaternion.Lerp(handtoCameraRot, handRotation, 0.3f)
+                        * Quaternion.Euler(new Vector3(handtoCameraY * -150f - 30f, handState.handEnum == HandEnum.RightHand ? -15f : 15f, 0f));
+                    Vector3 pointerRotationToV3 = pointerRotation * Vector3.forward;
+                    pointerRotation = Quaternion.LookRotation(m_OneEuroFilters[(int)handState.handEnum].Step(Time.realtimeSinceStartup, pointerRotationToV3));
                     handState.pointerPose = new Pose(pointerPosition, pointerRotation);
                 }
             }
@@ -271,19 +282,45 @@ namespace NRKernal
             }
         }
 
-        private void CaculatePinchState(HandState handState)
-        {
-            handState.pinchStrength = HandStateUtility.GetIndexFingerPinchStrength(handState);
-            handState.isPinching = handState.pinchStrength > float.Epsilon;
-        }
-
         private bool IsPerformingSystemGesture(HandState handState)
         {
             if (!IsRunning)
             {
                 return false;
             }
-            return HandStateUtility.IsSystemGesture(handState);
+            return handState.currentGesture == HandGesture.System;
+        }
+
+        public class OneEuroFilter
+        {
+            public float Beta = 10f;
+            public float MinCutoff = 1.0f;
+            const float DCutOff = 1.0f;
+            (float t, Vector3 x, Vector3 dx) _prev;
+
+            public Vector3 Step(float t, Vector3 x)
+            {
+                var t_e = t - _prev.t;
+
+                if (t_e < 1e-5f)
+                    return _prev.x;
+
+                var dx = (x - _prev.x) / t_e;
+                var dx_res = Vector3.Lerp(_prev.dx, dx, Alpha(t_e, DCutOff));
+
+                var cutoff = MinCutoff + Beta * dx_res.magnitude;
+                var x_res = Vector3.Lerp(_prev.x, x, Alpha(t_e, cutoff));
+
+                _prev = (t, x_res, dx_res);
+
+                return x_res;
+            }
+
+            static float Alpha(float t_e, float cutoff)
+            {
+                var r = 2 * Mathf.PI * cutoff * t_e;
+                return r / (r + 1);
+            }
         }
     }
 }

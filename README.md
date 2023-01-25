@@ -12,7 +12,7 @@ Please install it into your own Uity project if you make hand tracking feature w
 ## Dependencies:
 I have tested the combination of following SDKs in my environment but other combinations probably work as well.<br>
 These SDK must be installed before hand.<br><br>
-(1) NRSDK Unity SDK 1.9.5<br>
+(1) NRSDK Unity SDK 1.10.0<br>
 https://developer.nreal.ai/download
 <br><br>
 (2) MRTK-Unity v2.8.2<br>

@@ -191,11 +191,19 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
             // Only update the hand ray if the hand is in pointing pose
             if (IsInPointingPose)
             {
+                
                 HandRay.Update(pointerPose.Position, GetPalmNormal(), CameraCache.Main.transform, ControllerHandedness);
                 Ray ray = HandRay.Ray;
 
                 pointerPose.Position = jointPoses[TrackedHandJoint.IndexKnuckle].Position;//ray.origin;
+                #if !UNITY_EDITOR
+                // right軸を中心にvを回転させる
+                Quaternion rotation = Quaternion.AngleAxis(30f, CameraCache.Main.transform.right);
+                Vector3 rotatedV = rotation * ray.direction;
+                pointerPose.Rotation = Quaternion.LookRotation(rotatedV);
+                #else
                 pointerPose.Rotation = Quaternion.LookRotation(ray.direction);
+                #endif
             }
 
             CoreServices.InputSystem?.RaiseSourcePoseChanged(InputSource, this, gripPose);

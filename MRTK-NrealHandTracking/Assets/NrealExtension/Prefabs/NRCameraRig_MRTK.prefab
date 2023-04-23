@@ -142,7 +142,7 @@ GameObject:
   - component: {fileID: 4198362825782264022}
   m_Layer: 0
   m_Name: CenterCamera
-  m_TagString: MainCamera
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -429,7 +429,7 @@ MonoBehaviour:
   TrackingModeAutoAdapt: 1
   UseRelative: 1
   leftCamera: {fileID: 4262751711630598626}
-  centerCamera: {fileID: 4262775532789767922}
+  centerCamera: {fileID: 4279058512997392806}
   centerAnchor: {fileID: 4281946494692758368}
   rightCamera: {fileID: 4263676433544110972}
 --- !u!114 &4248932552886613092

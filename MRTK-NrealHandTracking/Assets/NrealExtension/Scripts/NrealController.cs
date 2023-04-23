@@ -198,7 +198,7 @@ namespace ARFukuoka.MixedReality.Toolkit.Nreal.Input
                 pointerPose.Position = jointPoses[TrackedHandJoint.IndexKnuckle].Position;//ray.origin;
                 #if !UNITY_EDITOR
                 // right軸を中心にvを回転させる
-                Quaternion rotation = Quaternion.AngleAxis(30f, CameraCache.Main.transform.right);
+                Quaternion rotation = Quaternion.AngleAxis(8f, CameraCache.Main.transform.right);
                 Vector3 rotatedV = rotation * ray.direction;
                 pointerPose.Rotation = Quaternion.LookRotation(rotatedV);
                 #else

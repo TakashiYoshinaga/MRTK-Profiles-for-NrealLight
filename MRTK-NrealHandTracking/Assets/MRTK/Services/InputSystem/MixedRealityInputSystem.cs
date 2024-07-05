@@ -171,7 +171,11 @@ namespace Microsoft.MixedReality.Toolkit.Input
             }
 
             BaseInputModule[] inputModules = UnityEngine.Object.FindObjectsOfType<BaseInputModule>();
-
+            Debug.Log($"****Found {inputModules.Length} input modules in the scene.");
+            for(int i = 0; i < inputModules.Length; i++)
+            {
+                Debug.Log("****Input module: "+inputModules[i].name+", "+inputModules[i].GetType());
+            }
             if (inputModules.Length == 0)
             {
                 DebugUtilities.LogVerbose("MixedRealityInputModule added to main camera");
@@ -182,6 +186,14 @@ namespace Microsoft.MixedReality.Toolkit.Input
             else if ((inputModules.Length == 1) && (inputModules[0] is MixedRealityInputModule))
             {
                 inputModule = inputModules[0] as MixedRealityInputModule;
+            }
+            else if(inputModules.Length ==2)
+            {
+                if(inputModules[0] as MixedRealityInputModule){
+                    inputModule = inputModules[0] as MixedRealityInputModule;
+                }else if(inputModules[1] as MixedRealityInputModule){
+                    inputModule = inputModules[1] as MixedRealityInputModule;
+                }
             }
             else
             {
@@ -264,7 +276,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
             // The check is only required once after input system is created.
             if (!isInputModuleAdded && !inputModuleChecked)
             {
-                if (inputModule.ManualInitializationRequired)
+                if (inputModule!=null && inputModule.ManualInitializationRequired)
                 {
                     inputModule.Initialize();
                 }

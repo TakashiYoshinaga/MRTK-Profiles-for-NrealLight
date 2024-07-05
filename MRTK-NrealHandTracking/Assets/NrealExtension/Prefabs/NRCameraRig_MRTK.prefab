@@ -373,6 +373,7 @@ GameObject:
   - component: {fileID: 4249117686025520688}
   - component: {fileID: 4248932552886613092}
   - component: {fileID: 4248091155857869502}
+  - component: {fileID: -7480092776960067282}
   m_Layer: 0
   m_Name: NRCameraRig_MRTK
   m_TagString: Untagged
@@ -428,6 +429,7 @@ MonoBehaviour:
   m_TrackingType: 0
   TrackingModeAutoAdapt: 1
   UseRelative: 1
+  AutoCacheWorldPose: 1
   leftCamera: {fileID: 4262751711630598626}
   centerCamera: {fileID: 4279058512997392806}
   centerAnchor: {fileID: 4281946494692758368}
@@ -459,3 +461,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_DefaultVirtualDisplayer: {fileID: 1406232319260624, guid: e0f440c4bb94be641af5dc113d3248f5,
     type: 3}
+--- !u!114 &-7480092776960067282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4280575283994837850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53b18169246544242bd6fedd8298aa00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

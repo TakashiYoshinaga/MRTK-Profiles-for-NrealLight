@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited.All rights reserved.
+* Copyright 2019 Xreal Techonology Limited.All rights reserved.
 *
 * This file is part of NRSDK.
 *
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 *
 *****************************************************************************/
 
@@ -103,7 +103,7 @@ namespace NRKernal
             public override void DrawGUI()
             {
                 string message = @"In order to develop on NRSDK, BuildTarget must be set to Android. 
-in panel of Player Settings, choose 'Androi' in platform list, and click 'Switch Platform' button.";
+in panel of Player Settings, choose 'Android' in platform list, and click 'Switch Platform' button.";
                 DrawContent("BuildTarget is Android", message);
             }
 
@@ -120,6 +120,84 @@ in panel of Player Settings, choose 'Androi' in platform list, and click 'Switch
                 if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
                 {
                     EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
+                }
+            }
+        }  /// <summary> A ckeck for Scripting Backend . </summary>
+        private class CkeckBuildScriptingBackend : Check
+        {
+            /// <summary> Default constructor. </summary>
+            public CkeckBuildScriptingBackend(MessageType level) : base(level)
+            {
+                _key = this.GetType().Name;
+            }
+
+            /// <summary> Query if this object is valid. </summary>
+            /// <returns> True if valid, false if not. </returns>
+            public override bool IsValid()
+            {
+                return PlayerSettings.GetScriptingBackend(BuildTargetGroup.Android) == ScriptingImplementation.IL2CPP;
+            }
+
+            /// <summary> Draw graphical user interface. </summary>
+            public override void DrawGUI()
+            {
+                string message = @"In order to develop on NRSDK, Scripting Backend must be set to IL2CPP. 
+in panel of 'Project Settings', click 'Player'->'Other Settings'->'Scripting Backend', select 'IL2CPP'.";
+                DrawContent("Scripting Backend is IL2CPP", message);
+            }
+
+            /// <summary> Query if this object is fixable. </summary>
+            /// <returns> True if fixable, false if not. </returns>
+            public override bool IsFixable()
+            {
+                return true;
+            }
+
+            /// <summary> Fixes this object. </summary>
+            public override void Fix()
+            {
+                if(PlayerSettings.GetScriptingBackend(BuildTargetGroup.Android) != ScriptingImplementation.IL2CPP)
+                {
+                    PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
+                }
+            }
+        }  /// <summary> A ckeck for Target Architectures . </summary>
+        private class CkeckBuildTargetArchitectures : Check
+        {
+            /// <summary> Default constructor. </summary>
+            public CkeckBuildTargetArchitectures(MessageType level) : base(level)
+            {
+                _key = this.GetType().Name;
+            }
+
+            /// <summary> Query if this object is valid. </summary>
+            /// <returns> True if valid, false if not. </returns>
+            public override bool IsValid()
+            {
+                return PlayerSettings.Android.targetArchitectures == AndroidArchitecture.ARM64;
+            }
+
+            /// <summary> Draw graphical user interface. </summary>
+            public override void DrawGUI()
+            {
+                string message = @"In order to develop on NRSDK, Target Architectures must be set to ARM64. 
+in panel of 'Project Settings', click 'Player'->'Other Settings'->'Target Architectures', select 'ARM64'.";
+                DrawContent("Target Architectures is ARM64", message);
+            }
+
+            /// <summary> Query if this object is fixable. </summary>
+            /// <returns> True if fixable, false if not. </returns>
+            public override bool IsFixable()
+            {
+                return PlayerSettings.GetScriptingBackend(BuildTargetGroup.Android) == ScriptingImplementation.IL2CPP;
+            }
+
+            /// <summary> Fixes this object. </summary>
+            public override void Fix()
+            {
+                if (PlayerSettings.Android.targetArchitectures != AndroidArchitecture.ARM64)
+                {
+                    PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
                 }
             }
         }
@@ -215,7 +293,7 @@ in dropdown list of Player Settings > Other Settings > Write Permission, choose 
             }
         }
 
-        /// <summary> Android minSdkVersion should be higher than 26. </summary>
+        /// <summary> Android minSdkVersion should be higher than  29. </summary>
         private class CkeckAndroidMinAPILevel : Check
         {
             public CkeckAndroidMinAPILevel(MessageType level) : base(level)
@@ -227,7 +305,7 @@ in dropdown list of Player Settings > Other Settings > Write Permission, choose 
             {
                 if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android)
                 {
-                    return PlayerSettings.Android.minSdkVersion >= AndroidSdkVersions.AndroidApiLevel26 ||
+                    return PlayerSettings.Android.minSdkVersion >= AndroidSdkVersions.AndroidApiLevel29 ||
                         PlayerSettings.Android.minSdkVersion == AndroidSdkVersions.AndroidApiLevelAuto;
                 }
                 else
@@ -239,8 +317,8 @@ in dropdown list of Player Settings > Other Settings > Write Permission, choose 
             /// <summary> Draw graphical user interface. </summary>
             public override void DrawGUI()
             {
-                string message = @"In order to run correct on mobile devices, Android minSdkVersion should be higher than 26.";
-                DrawContent("Android minSdkVersion should be higher than 26", message);
+                string message = @"In order to run correct on mobile devices, Android minSdkVersion should be higher than 29.";
+                DrawContent("Android minSdkVersion should be higher than 29", message);
             }
 
             /// <summary> Query if this object is fixable. </summary>
@@ -255,7 +333,7 @@ in dropdown list of Player Settings > Other Settings > Write Permission, choose 
             {
                 if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android)
                 {
-                    PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
+                    PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel29;
                 }
             }
         }
@@ -316,8 +394,9 @@ in dropdown list of Player Settings > Resolution and Presentation > Default Orie
             {
                 if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android)
                 {
+                    bool autoGraphicsAPI = PlayerSettings.GetUseDefaultGraphicsAPIs(BuildTarget.Android);
                     var graphics = PlayerSettings.GetGraphicsAPIs(BuildTarget.Android);
-                    if (graphics != null && graphics.Length == 1 &&
+                    if (!autoGraphicsAPI && graphics != null && graphics.Length == 1 &&
                         graphics[0] == UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3)
                     {
                         return true;
@@ -350,6 +429,7 @@ in dropdown list of Player Settings > Other Settings > Graphics APIs , choose 'O
             {
                 if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android)
                 {
+                    PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
                     PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new GraphicsDeviceType[1] { GraphicsDeviceType.OpenGLES3 });
                 }
             }
@@ -396,213 +476,6 @@ in dropdown list of Player Settings > Other Settings > Color Space, choose 'Line
             }
         }
 
-        /// <summary> A ckeck color space. </summary>
-        private class CkeckXRDefine : Check
-        {
-
-            /// <summary> Default constructor. </summary>
-            public CkeckXRDefine(MessageType level) : base(level)
-            {
-                _key = this.GetType().Name;
-            }
-
-            /// <summary> Query if this object is valid. </summary>
-            /// <returns> True if valid, false if not. </returns>
-            public override bool IsValid()
-            {
-                var dict = PackageUtility.GetAllPackagesByManifest();
-                if (dict.Count == 0 || !dict.ContainsKey(NativeConstants.XRPLUGIN))
-                {
-                    return !DefineSymbolsUtility.HasSymbol(NativeConstants.XRDEFINE);
-                }
-                else
-                {
-                    return DefineSymbolsUtility.HasSymbol(NativeConstants.XRDEFINE);
-                }
-            }
-
-            /// <summary> Draw graphical user interface. </summary>
-            public override void DrawGUI()
-            {
-                string message = @"Not configured correctly.";
-                DrawContent("Define is not correctly.", message);
-            }
-
-            /// <summary> Query if this object is fixable. </summary>
-            /// <returns> True if fixable, false if not. </returns>
-            public override bool IsFixable()
-            {
-                return true;
-            }
-
-            /// <summary> Fixes this object. </summary>
-            public override void Fix()
-            {
-                var dict = PackageUtility.GetAllPackagesByManifest();
-                if (dict.Count == 0 || !dict.ContainsKey(NativeConstants.XRPLUGIN))
-                {
-                    DefineSymbolsUtility.RemoveSymbol(NativeConstants.XRDEFINE);
-                }
-                else
-                {
-                    DefineSymbolsUtility.AddSymbol(NativeConstants.XRDEFINE);
-                }
-            }
-        }
-
-        /// <summary> A ckeck color space. </summary>
-        private class CkeckDependency : Check
-        {
-            public class PackageInfo
-            {
-                public string name;
-                public string version;
-            }
-            private PackageInfo XRPluginPackageInfo;
-
-            /// <summary> Default constructor. </summary>
-            public CkeckDependency(MessageType level) : base(level)
-            {
-                _key = this.GetType().Name;
-            }
-
-            private void FreshXRPluginVersion(Action<PackageInfo> callback = null)
-            {
-                PackageUtility.GetAllPackages((info) =>
-                {
-                    if (!info.isSuccess)
-                    {
-                        NRDebugger.Warning("Can not get all packages info...");
-                        return;
-                    }
-
-                    var package_result = info.packages.Select((package) =>
-                    {
-                        UnityEditor.PackageManager.PackageInfo p = null;
-                        if (package.name.Equals(NativeConstants.XRPLUGIN))
-                        {
-                            p = package;
-                        }
-                        return p;
-                    }).First();
-
-                    if (XRPluginPackageInfo == null)
-                    {
-                        XRPluginPackageInfo = new PackageInfo();
-                    }
-                    if (package_result != null)
-                    {
-                        XRPluginPackageInfo.name = package_result.name;
-                        XRPluginPackageInfo.version = package_result.version;
-                    }
-
-                    callback?.Invoke(XRPluginPackageInfo);
-                });
-            }
-
-            /// <summary> Query if this object is valid. </summary>
-            /// <returns> True if valid, false if not. </returns>
-            public override bool IsValid()
-            {
-                if (XRPluginPackageInfo == null)
-                {
-                    FreshXRPluginVersion();
-                    return true;
-                }
-
-                bool result = true;
-                if (string.Compare(XRPluginPackageInfo.version, NativeConstants.XRPLUGIN_MIN_VERSION) < 0)
-                {
-                    result = false;
-                }
-
-                if (!result)
-                {
-                    FreshXRPluginVersion();
-                }
-
-                return result;
-            }
-
-            public override void DrawGUI()
-            {
-                const string title = "Check dependencies";
-                const string messageFormat = "package \"{0}\" version is \"{1}\", need to upgrade to \"{2}\"";
-
-                StringBuilder st = new StringBuilder();
-                if (XRPluginPackageInfo != null)
-                {
-                    if (string.Compare(XRPluginPackageInfo.version, NativeConstants.XRPLUGIN_MIN_VERSION) < 0)
-                    {
-                        st.AppendLine(string.Format(messageFormat, XRPluginPackageInfo.name, XRPluginPackageInfo.version, NativeConstants.XRPLUGIN_MIN_VERSION));
-                    }
-                }
-                else
-                {
-                    FreshXRPluginVersion();
-                    st.AppendLine("Waitting to get dependencies version...");
-                }
-                DrawContent(title, st.ToString());
-            }
-
-            /// <summary> Query if this object is fixable. </summary>
-            /// <returns> True if fixable, false if not. </returns>
-            public override bool IsFixable()
-            {
-                return true;
-            }
-
-            /// <summary> Fixes this object. </summary>
-            public override void Fix()
-            {
-                if (string.Compare(XRPluginPackageInfo.version, NativeConstants.XRPLUGIN_MIN_VERSION) < 0)
-                {
-                    Debug.LogFormat("[CkeckDependency] Fix dependency , current:{0} dependency:{1}",
-                        XRPluginPackageInfo.version, NativeConstants.XRPLUGIN_MIN_VERSION);
-                    FixedXRProviderPlugin(NativeConstants.XRPLUGIN, NativeConstants.XRPLUGIN_MIN_VERSION);
-                }
-            }
-
-            public static void FixedXRProviderPlugin(string key, string version)
-            {
-                string path = Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Packages/manifest.json");
-                var contents = File.ReadAllLines(path);
-                var json = JsonMapper.ToObject(File.ReadAllText(path));
-
-                for (int i = 0; i < contents.Length; i++)
-                {
-                    if (contents[i].Contains(key) && !contents[i].Contains('{'))
-                    {
-                        var valueofkey = json["dependencies"][key].ToString();
-                        if (key.Equals(NativeConstants.XRPLUGIN))
-                        {
-                            if (valueofkey.Contains('#'))
-                            {
-                                var value_params = valueofkey.Split('#');
-                                if (value_params.Length != 2)
-                                {
-                                    NRDebugger.Warning("Dependencie format error:[{0}]", valueofkey);
-                                    break;
-                                }
-                                valueofkey = string.Format("{0}#{1}", value_params[0], version);
-                            }
-                            else
-                            {
-                                valueofkey = string.Format("{0}#{1}", valueofkey, version);
-                            }
-                        }
-                        else
-                        {
-                            valueofkey = version;
-                        }
-                        contents[i] = string.Format("   \"{0}\": \"{1}\",", key, valueofkey.Replace("\"", ""));
-                    }
-                }
-
-                File.WriteAllLines(path, contents);
-            }
-        }
-
         /// <summary> A ckeck that android build system is gradle. </summary>
         private class CkeckAndroidBuildGradle: Check
         {
@@ -640,21 +513,65 @@ in dropdown list of Player Settings > Other Settings > Color Space, choose 'Line
             }
         }
 
+#if UNITY_EDITOR_OSX
+        private class CheckImageTrackingCliExecutePermission : Check
+        {
+            private string m_CliBinaryPath = null;
+            string CliBinaryPath
+            {
+                get
+                {
+                    if (m_CliBinaryPath == null)
+                    {
+                        NRTrackingImageDatabase.FindCliBinaryPath(out m_CliBinaryPath);
+                    }
+                    return m_CliBinaryPath;
+                }
+            }
+            public CheckImageTrackingCliExecutePermission(MessageType level): base(level)
+            {
+                _key = GetType().Name;
+            }
+
+            public override void DrawGUI()
+            {
+                DrawContent("ImageTrackingCli", "Has no execute permission");
+            }
+
+            public override void Fix()
+            {
+                ShellHelper.RunCommand("chmod", $"755 {CliBinaryPath}");
+            }
+
+            public override bool IsFixable()
+            {
+                return true;
+            }
+
+            public override bool IsValid()
+            {
+                ShellHelper.RunCommand("ls", $"-l {CliBinaryPath}", out string output, out string error);
+                return output.Contains("-rwxr-xr-x");
+            }
+        }
+#endif
+
         /// <summary> The checks. </summary>
         private static Check[] checks = new Check[]
         {
             new CkeckBuildTargetAndroid(MessageType.Error),
             new CkeckAndroidVsyn(MessageType.Error),
             new CkeckAndroidMinAPILevel(MessageType.Error),
+            new CkeckBuildScriptingBackend(MessageType.Error),
+            new CkeckBuildTargetArchitectures(MessageType.Error),                
             //new CkeckAndroidSDCardPermission(),
             new CkeckAndroidOrientation(MessageType.Warning),
             new CkeckAndroidGraphicsAPI(MessageType.Error),
-            new CkeckXRDefine(MessageType.Error),
-#if USING_XR_SDK
-            new CkeckDependency(MessageType.Error)
-#endif
             new CkeckAndroidBuildGradle(MessageType.Error),
             //new CkeckColorSpace(Level.Error),
+#if UNITY_EDITOR_OSX
+            new CheckImageTrackingCliExecutePermission(MessageType.Error),
+#endif
         };
 
         /// <summary> The window. </summary>
@@ -666,7 +583,7 @@ in dropdown list of Player Settings > Other Settings > Color Space, choose 'Line
 
         static ProjectTipsWindow()
         {
-            EditorApplication.update -= Update;
+            EditorApplication.update += Update;
         }
 
         /// <summary> Shows the window. </summary>

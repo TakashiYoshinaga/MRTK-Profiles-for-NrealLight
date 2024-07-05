@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -12,10 +12,10 @@ namespace NRKernal
     using System;
     using UnityEngine;
 
-    /// <summary> A trackable image in the real world detected by NRInternel. </summary>
+    /// <summary> A trackable image in the real world detected by NRInternal. </summary>
     public class NRTrackableImage : NRTrackable
     {
-        internal NRTrackableImageSubsystem TrackableImageSubsystem
+        public NRTrackableImageSubsystem TrackableImageSubsystem
         {
             get
             {

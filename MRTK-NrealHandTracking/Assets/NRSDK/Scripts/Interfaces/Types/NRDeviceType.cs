@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -14,7 +14,19 @@ namespace NRKernal
     /// </summary>
     public enum NRDeviceType
     {
-        NrealLight = 1,
-        NrealAir = 2,
+        None = 0,
+        XrealLight = 1,
+        XrealAir = 2,
+        XrealAIR2_PRO = 3,
+        XrealAIR2 = 4,
+        XrealAIR2_ULTRA = 5,
+        Xreal_HONOR_AIR = 1001,
+    }
+
+    public enum NRDeviceCategory
+    {
+        INVALID = 0,
+        REALITY = 1,
+        VISION = 2,
     }
 }

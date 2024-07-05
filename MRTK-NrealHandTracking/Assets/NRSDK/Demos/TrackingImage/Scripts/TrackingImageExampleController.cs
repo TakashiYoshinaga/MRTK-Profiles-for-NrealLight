@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -13,7 +13,7 @@ namespace NRKernal.NRExamples
     using UnityEngine;
 
     /// <summary> Controller for TrackingImage example. </summary>
-    [HelpURL("https://developer.nreal.ai/develop/unity/image-tracking")]
+    [HelpURL("https://developer.xreal.com/develop/unity/image-tracking")]
     public class TrackingImageExampleController : MonoBehaviour
     {
         /// <summary> A prefab for visualizing an TrackingImage. </summary>

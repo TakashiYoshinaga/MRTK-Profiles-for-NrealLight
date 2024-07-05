@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -52,7 +52,7 @@ namespace NRKernal
         }
 
         /// <summary> Load raw texture data. </summary>
-        /// <param name="rgbRawDataFrame"> .</param>
+        /// <param name="frame"> .</param>
         protected override void OnRawDataUpdate(FrameRawData frame)
         {
             if (m_Texture == null)

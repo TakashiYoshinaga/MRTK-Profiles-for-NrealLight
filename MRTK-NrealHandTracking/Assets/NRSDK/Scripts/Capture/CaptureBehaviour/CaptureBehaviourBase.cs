@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -35,6 +35,17 @@ namespace NRKernal.Record
         public virtual void Init(FrameCaptureContext context)
         {
             this.m_FrameCaptureContext = context;
+        }
+        
+        /// <summary> Updates the capture behaviour. </summary>
+        protected virtual void Update()
+        {
+            if (m_FrameCaptureContext != null && m_FrameCaptureContext.RequestCameraParam().lockRoll)
+            {
+                Vector3 eulerAngles = CaptureCamera.transform.eulerAngles;
+                eulerAngles.z = 0;
+                CaptureCamera.transform.eulerAngles = eulerAngles;
+            }
         }
 
         public void SetCameraMask(int mask)

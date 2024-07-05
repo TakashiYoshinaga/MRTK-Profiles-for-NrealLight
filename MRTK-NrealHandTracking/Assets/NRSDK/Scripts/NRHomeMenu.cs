@@ -50,7 +50,7 @@ namespace NRKernal
         private void OnComfirmButtonClick()
         {
             Hide();
-            NRAppManager.QuitApplication();
+            NRAppManager.QuitApplication(true);
         }
 
         /// <summary> Executes the 'cancel button click' action. </summary>

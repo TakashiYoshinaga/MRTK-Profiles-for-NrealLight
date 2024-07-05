@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -40,10 +40,9 @@ namespace NRKernal
         /// <param name="result">         The result.</param>
         /// <param name="module">         The module.</param>
         /// <param name="funcName">       (Optional) Name of the function.</param>
-        /// <param name="needthrowerror"> (Optional) True to needthrowerror.</param>
+        /// <param name="needthrowerror"> (Optional) If a exception should be throwed. Normally, only significant lifecycle function need to throw exception. </param>
         public static void Check(NativeResult result, object module, string funcName = "", bool needthrowerror = false)
         {
-#if !UNITY_EDITOR
             if (result == NativeResult.Success)
             {
                 return;
@@ -65,6 +64,17 @@ namespace NRKernal
                         case NativeResult.UnSupported:
                             throw new NRUnSupportedError(result, module_tag + "UnSupported error!");
                         case NativeResult.GlassesDisconnect:
+                        case NativeResult.ControlChannelInternalError:
+                        case NativeResult.ControlChannelInitFail:
+                        case NativeResult.ControlChannelStartFail:
+                        case NativeResult.ImuChannelInternalError:
+                        case NativeResult.ImuChannelInitFail:
+                        case NativeResult.ImuChannelStartFail:
+                        case NativeResult.ImuChannelFrequencyCritical:
+                        case NativeResult.DisplayControlChannelInternalError:
+                        case NativeResult.DisplayControlChannelInitFail:
+                        case NativeResult.DisplayControlChannelStartFail:
+                        case NativeResult.DisplayControlChannelFrequencyCritical:
                             throw new NRGlassesConnectError(result, module_tag + "Glasses connect error!");
                         case NativeResult.SdkVersionMismatch:
                             throw new NRSdkVersionMismatchError(result, module_tag + "SDK version mismatch error!");
@@ -77,18 +87,22 @@ namespace NRKernal
                         case NativeResult.GetDisplayFailure:
                             throw new NRGetDisplayFailureError(result, module_tag + "MRSpace display device Not Find!");
                         case NativeResult.GetDisplayModeMismatch:
+                        case NativeResult.DisplayNoInStereoMode:
                             throw new NRDisplayModeMismatchError(result, module_tag + "Display mode mismatch, as MRSpace mode is needed!");
                         case NativeResult.UnSupportedHandtrackingCalculation:
                             throw new NRUnSupportedHandtrackingCalculationError(result, module_tag + "Not support hand tracking calculation!");
+                        case NativeResult.NR_RESULT_NOT_FIND_RUNTIME:
+                            throw new NRRuntimeNotFoundError(result, module_tag + "Not found sdk runtime!");
                         default:
+                            NRDebugger.Error(module_tag + result.ToString());
                             break;
                     }
                 }
-                catch (System.Exception e)
+                catch (NRNativeError e)
                 {
                     MainThreadDispather.QueueOnMainThread(() =>
                     {
-                        NRSessionManager.Instance.OprateInitException(e);
+                        NRSessionManager.Instance.HandleKernalError(e);
                     });
 
                     // Normal level Error don't need to throw.
@@ -102,7 +116,6 @@ namespace NRKernal
             {
                 NRDebugger.Error(module_tag + result.ToString());
             }
-#endif
         }
     }
 }

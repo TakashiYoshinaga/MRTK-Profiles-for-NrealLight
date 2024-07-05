@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -76,7 +76,7 @@ namespace NRKernal.Record
         {
             float volumeFactorMic = 1.0f;
             float volumeFactorApp = 1.0f;
-            if (NRDevice.Subsystem.GetDeviceType() == NRDeviceType.NrealLight)
+            if (NRDevice.Subsystem.GetDeviceType() == NRDeviceType.XrealLight)
             {
                 volumeFactorMic = NativeConstants.RECORD_VOLUME_MIC;
                 volumeFactorApp = NativeConstants.RECORD_VOLUME_APP;
@@ -181,7 +181,7 @@ namespace NRKernal.Record
                                 var result = new AudioCaptureResult();
                                 result.resultType = CaptureResultType.UnknownError;
                                 onAudioModeStartedCallback?.Invoke(result);
-                                NRSessionManager.Instance.OprateInitException(new NRPermissionDenyError(NativeConstants.ScreenCaptureDenyErrorTip));
+                                NRSessionManager.Instance.HandleKernalError(new NRPermissionDenyError(NativeConstants.ScreenCaptureDenyErrorTip));
                             }
                         });
                     }
@@ -190,7 +190,7 @@ namespace NRKernal.Record
                         var result = new AudioCaptureResult();
                         result.resultType = CaptureResultType.UnknownError;
                         onAudioModeStartedCallback?.Invoke(result);
-                        NRSessionManager.Instance.OprateInitException(new NRPermissionDenyError(NativeConstants.AudioPermissionDenyErrorTip));
+                        NRSessionManager.Instance.HandleKernalError(new NRPermissionDenyError(NativeConstants.AudioPermissionDenyErrorTip));
                     }
                 });
             }
@@ -207,7 +207,7 @@ namespace NRKernal.Record
                         var result = new AudioCaptureResult();
                         result.resultType = CaptureResultType.UnknownError;
                         onAudioModeStartedCallback?.Invoke(result);
-                        NRSessionManager.Instance.OprateInitException(new NRPermissionDenyError(NativeConstants.AudioPermissionDenyErrorTip));
+                        NRSessionManager.Instance.HandleKernalError(new NRPermissionDenyError(NativeConstants.AudioPermissionDenyErrorTip));
                     }
                 });
             }

@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -21,8 +21,6 @@ namespace NRKernal
         private NativeController m_NativeController;
         /// <summary> The processed frame. </summary>
         private int m_ProcessedFrame;
-        /// <summary> True to need initialize. </summary>
-        private bool m_NeedInit = true;
         /// <summary> True to need recenter. </summary>
         private bool m_NeedRecenter;
         /// <summary> Array of home pressing timers. </summary>
@@ -35,7 +33,7 @@ namespace NRKernal
         /// <param name="states"> The states.</param>
         public NRControllerProvider(ControllerState[] states) : base(states)
         {
-
+            Create();
         }
 
         /// <summary> Gets the number of controllers. </summary>
@@ -44,8 +42,9 @@ namespace NRKernal
         {
             get
             {
-                if (!Inited)
+                if (!running)
                     return 0;
+
                 return m_NativeController.GetControllerCount();
             }
         }
@@ -62,62 +61,82 @@ namespace NRKernal
             return string.Empty;
         }
 
-        public ControllerHandEnum GetHandednessType()
+        public ControllerHandEnum GetHandednessType(int index)
         {
             if (m_NativeController != null)
             {
-                return m_NativeController.GetHandednessType() == HandednessType.LEFT_HANDEDNESS ? ControllerHandEnum.Left : ControllerHandEnum.Right;
+                return m_NativeController.GetHandednessType(index) == HandednessType.LEFT_HANDEDNESS ? ControllerHandEnum.Left : ControllerHandEnum.Right;
             }
             return ControllerHandEnum.Right;
         }
 
-        /// <summary> Executes the 'pause' action. </summary>
-        public override void OnPause()
+        private void Create()
         {
+            m_NativeController = new NativeController();
+            m_NativeController.Create();
+        }
+
+        /// <summary> Start the controller. </summary>
+        public override void Start()
+        {
+            base.Start();
+
+            if (m_NativeController != null)
+            {
+                m_NativeController.Start();
+            }
+
+#if !UNITY_EDITOR
+            NRDebugger.Info("[NRInput] version:" + GetVersion(0));
+#endif
+        }
+
+        /// <summary> Pause the controller. </summary>
+        public override void Pause()
+        {
+            base.Pause();
+
             if (m_NativeController != null)
             {
                 m_NativeController.Pause();
             }
         }
 
-        /// <summary> Executes the 'resume' action. </summary>
-        public override void OnResume()
+        /// <summary> Resume the controller. </summary>
+        public override void Resume()
         {
+            base.Resume();
+
             if (m_NativeController != null)
             {
                 m_NativeController.Resume();
             }
         }
 
-        /// <summary> Updates this object. </summary>
+        /// <summary> Updates the controller. </summary>
         public override void Update()
         {
+            if (!running)
+                return;
+
             if (m_ProcessedFrame == Time.frameCount)
                 return;
             m_ProcessedFrame = Time.frameCount;
-            if (m_NeedInit)
-            {
-                InitNativeController();
-                return;
-            }
-            if (!Inited)
-                return;
-            int availableCount = ControllerCount;
-            if (availableCount > 0 && NRInput.GetControllerAvailableFeature(ControllerAvailableFeature.CONTROLLER_AVAILABLE_FEATURE_POSITION))
-            {
-                UpdateHeadPoseToController();
-            }
-            for (int i = 0; i < availableCount; i++)
+
+            for (int i = 0; i < ControllerCount; i++)
             {
                 UpdateControllerState(i);
             }
         }
 
-        /// <summary> Executes the 'destroy' action. </summary>
-        public override void OnDestroy()
+        /// <summary> Destroy the controller. </summary>
+        public override void Destroy()
         {
+            base.Destroy();
+
             if (m_NativeController != null)
             {
+                m_NativeController.Stop();
                 m_NativeController.Destroy();
                 m_NativeController = null;
             }
@@ -130,8 +149,9 @@ namespace NRKernal
         /// <param name="amplitude">       (Optional) The amplitude.</param>
         public override void TriggerHapticVibration(int index, float durationSeconds = 0.1f, float frequency = 1000f, float amplitude = 0.5f)
         {
-            if (!Inited)
+            if (!running)
                 return;
+
             if (states[index].controllerType == ControllerType.CONTROLLER_TYPE_PHONE)
             {
                 PhoneVibrateTool.TriggerVibrate(durationSeconds);
@@ -153,32 +173,12 @@ namespace NRKernal
             m_NeedRecenter = true;
         }
 
-        /// <summary> Initializes the native controller. </summary>
-        private void InitNativeController()
-        {
-            m_NativeController = new NativeController();
-            if (m_NativeController.Init())
-            {
-                Inited = true;
-                NRDebugger.Info("[NRControllerProvider] Init Succeed");
-            }
-            else
-            {
-                m_NativeController = null;
-                NRDebugger.Error("[NRControllerProvider] Init Failed !!");
-            }
-
-#if !UNITY_EDITOR
-            NRDebugger.Info("[NRInput] version:" + GetVersion(0));
-#endif
-            m_NeedInit = false;
-        }
-
         /// <summary> Updates the controller state described by index. </summary>
         /// <param name="index"> Zero-based index of the.</param>
         private void UpdateControllerState(int index)
         {
             m_NativeController.UpdateState(index);
+            var hmdTime = NRSessionManager.Instance.TrackingSubSystem.GetHMDTimeNanos();
             states[index].controllerType = m_NativeController.GetControllerType(index);
 #if UNITY_EDITOR
             if (NRInput.EmulateVirtualDisplayInEditor)
@@ -186,10 +186,10 @@ namespace NRKernal
                 states[index].controllerType = ControllerType.CONTROLLER_TYPE_PHONE;
             }
 #endif
-            states[index].availableFeature = (ControllerAvailableFeature)m_NativeController.GetAvailableFeatures(index);
+            states[index].availableFeature = m_NativeController.GetAvailableFeatures(index);
             states[index].connectionState = m_NativeController.GetConnectionState(index);
-            states[index].rotation = m_NativeController.GetPose(index).rotation;
-            states[index].position = m_NativeController.GetPose(index).position;
+            states[index].rotation = m_NativeController.GetPose(index, hmdTime).rotation;
+            states[index].position = m_NativeController.GetPose(index, hmdTime).position;
             states[index].gyro = m_NativeController.GetGyro(index);
             states[index].accel = m_NativeController.GetAccel(index);
             states[index].mag = m_NativeController.GetMag(index);
@@ -237,15 +237,6 @@ namespace NRKernal
             else
             {
                 homePressingTimerArr[index] = 0f;
-            }
-        }
-
-        /// <summary> Updates the head pose to controller. </summary>
-        private void UpdateHeadPoseToController()
-        {
-            if (m_NativeController != null && NRInput.CameraCenter)
-            {
-                m_NativeController.UpdateHeadPose(new Pose(NRInput.CameraCenter.position, NRInput.CameraCenter.rotation));
             }
         }
     }

@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/         
+* https://www.xreal.com/         
 * 
 *****************************************************************************/
 
@@ -20,8 +20,8 @@ namespace NRKernal
         CONTROLLER_TYPE_EDITOR = 1001,
         /// <summary> An enum constant representing the controller type unknown option. </summary>
         CONTROLLER_TYPE_UNKNOWN = -1,
-        /// <summary> An enum constant representing the controller type nreallight option. </summary>
-        CONTROLLER_TYPE_NREALLIGHT = 0,
+        /// <summary> An enum constant representing the controller type xreallight option. </summary>
+        CONTROLLER_TYPE_XREALLIGHT = 0,
         /// <summary> An enum constant representing the controller type phone option. </summary>
         CONTROLLER_TYPE_PHONE = 1,
         /// <summary> An enum constant representing the controller type hand option. </summary>
@@ -29,11 +29,12 @@ namespace NRKernal
     }
 
     /// <summary> Values that represent controller available features. </summary>
-    public enum ControllerAvailableFeature
+    [Flags]
+    public enum ControllerAvailableFeature : ulong
     {
-        /// <summary> The position is avaliable. </summary>
+        /// <summary> The position is available. </summary>
         CONTROLLER_AVAILABLE_FEATURE_POSITION = (1 << 0),
-        /// <summary> The rotation is avaliable. </summary>
+        /// <summary> The rotation is available. </summary>
         CONTROLLER_AVAILABLE_FEATURE_ROTATION = (1 << 1),
         /// <summary>
         /// An enum constant representing the controller available feature gyro option. </summary>

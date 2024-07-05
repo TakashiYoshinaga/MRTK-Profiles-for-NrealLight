@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -62,5 +62,42 @@ namespace NRKernal
 
         /// <summary> The operation is processing. </summary>
         Processing = 16,
+
+        /// <summary> The number is limited. </summary>
+        NumberLimited = 17,
+
+        /// <summary> The display is not in stereo mode. </summary>
+        DisplayNoInStereoMode = 18,
+
+        /// <summary> The data is invalid. </summary>
+        InvalidData = 19,
+        
+        /// <summary> Runtime is not found. </summary>
+        NR_RESULT_NOT_FIND_RUNTIME = 20,
+            
+        // Control channel internal error
+        ControlChannelInternalError = 100,
+        // Control channel initialize fail
+        ControlChannelInitFail = 101,
+        // Control channel start fail
+        ControlChannelStartFail = 102,
+
+        // IMU channel internal error
+        ImuChannelInternalError = 200,
+        // IMU channel initialize fail
+        ImuChannelInitFail = 201,
+        // IMU channel start faile
+        ImuChannelStartFail = 202,
+        // IMU channel data frequency too low
+        ImuChannelFrequencyCritical = 203,
+
+        // Display control channel internal error
+        DisplayControlChannelInternalError = 300,
+        // Display control initialize fail
+        DisplayControlChannelInitFail = 301,
+        // Display control start fail
+        DisplayControlChannelStartFail = 302,
+        // Display control channel data frequency too low
+        DisplayControlChannelFrequencyCritical = 303,
     }
 }

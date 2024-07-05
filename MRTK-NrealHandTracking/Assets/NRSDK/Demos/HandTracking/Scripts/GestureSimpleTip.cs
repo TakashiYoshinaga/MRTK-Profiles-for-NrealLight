@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace NRKernal.NRExamples
@@ -16,6 +14,7 @@ namespace NRKernal.NRExamples
             public const string Gesture_Victory = "Victory";
             public const string Gesture_Call = "Call";
             public const string Gesture_System = "System";
+            public const string Gesture_ThumbsUp = "ThumbsUp";
         }
 
         public HandEnum handEnum;
@@ -57,6 +56,9 @@ namespace NRKernal.NRExamples
                     break;
                 case HandGesture.System:
                     gestureTxt.text = GetHandEnumLabel() + GestureName.Gesture_System;
+                    break;
+                case HandGesture.ThumbsUp:
+                    gestureTxt.text = GetHandEnumLabel() + GestureName.Gesture_ThumbsUp;
                     break;
                 default:
                     gestureTxt.text = string.Empty;

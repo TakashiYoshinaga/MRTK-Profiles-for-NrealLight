@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -12,18 +12,19 @@ namespace NRKernal
     /// <summary> The reason of HMD untracked. </summary>
     public enum LostTrackingReason
     {
-        /// <summary> Preinitializing.. </summary>
+        /// <summary> Pre initializing. </summary>
         PRE_INITIALIZING = -1,
 
+        /// <summary> None. </summary>
         NONE = 0,
 
-        /// <summary> Initializing.. </summary>
+        /// <summary> Initializing. </summary>
         INITIALIZING = 1,
 
-        /// <summary> Move too fast.. </summary>
+        /// <summary> Move too fast. </summary>
         EXCESSIVE_MOTION = 2,
 
-        /// <summary> Feature point deficiency.. </summary>
+        /// <summary> Feature point deficiency. </summary>
         INSUFFICIENT_FEATURES = 3,
 
         /// <summary> Reposition. </summary>

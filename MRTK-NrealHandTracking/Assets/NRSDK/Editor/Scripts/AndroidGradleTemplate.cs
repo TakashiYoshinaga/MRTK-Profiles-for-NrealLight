@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited.All rights reserved.
+* Copyright 2019 Xreal Techonology Limited.All rights reserved.
 *
 * This file is part of NRSDK.
 *
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 *
 *****************************************************************************/
 
@@ -96,8 +96,10 @@ namespace NRKernal
 
                         if (updateVersion)
                         {
-                            result = line.Replace(subVersion, "3.4.3");
-                            Debug.LogFormat("update gradle setting : {0} --> {1}", subVersion, "3.4.3");
+                            string version = string.Format("{0}.{1}.{2}", mMajorVersionNum, mMiddleVersionNum,
+                                mMinorVersionNum);
+                            result = line.Replace(subVersion, version);
+                            Debug.LogFormat("update gradle setting : {0} --> {1}", subVersion, version);
                         }
                     }
                 }

@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -20,6 +20,9 @@ namespace NRKernal
         /// <summary> Right eye pose. </summary>
         public Pose REyePose;
 
+        /// <summary> Center eye pose. </summary>
+        public Pose CEyePose;
+
         /// <summary> RGB eye pose. </summary>
         public Pose RGBEyePose;
     }
@@ -32,6 +35,9 @@ namespace NRKernal
 
         /// <summary> Right display project matrix. </summary>
         public Matrix4x4 REyeMatrix;
+
+        /// <summary> Center display project matrix. </summary>
+        public Matrix4x4 CEyeMatrix;
 
         /// <summary> RGB camera project matrix. </summary>
         public Matrix4x4 RGBEyeMatrix;

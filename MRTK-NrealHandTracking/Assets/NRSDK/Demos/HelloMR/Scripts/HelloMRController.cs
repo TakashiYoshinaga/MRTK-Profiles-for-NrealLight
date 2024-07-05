@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -12,7 +12,7 @@ using UnityEngine;
 namespace NRKernal.NRExamples
 {
     /// <summary> Controls the HelloAR example. </summary>
-    [HelpURL("https://developer.nreal.ai/develop/unity/controller")]
+    [HelpURL("https://developer.xreal.com/develop/unity/controller")]
     public class HelloMRController : MonoBehaviour
     {
         /// <summary> A model to place when a raycast from a user touch hits a plane. </summary>

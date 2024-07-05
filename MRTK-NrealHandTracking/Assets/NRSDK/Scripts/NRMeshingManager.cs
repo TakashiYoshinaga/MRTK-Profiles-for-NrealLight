@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -11,141 +11,162 @@ namespace NRKernal
 {
     using System;
     using System.Collections;
-    using System.Collections.Generic;
     using UnityEngine;
-    using static NRKernal.NativeMeshing;
 
+    /// <summary>
+    ///  Interface for processing mesh information.
+    /// </summary>
     public interface IMeshInfoProcessor
     {
-        void UpdateMeshInfo(ulong identifier, NRMeshingBlockState meshingBlockState, Mesh mesh);
+        /// <summary>
+        /// Update mesh information for a specific identifier.
+        /// </summary>
+        /// <param name="identifier">The unique identifier of the mesh.</param>
+        /// <param name="meshInfo">The mesh information.</param>
+        void UpdateMeshInfo(ulong identifier, NRMeshInfo meshInfo);
+        /// <summary>
+        /// Clear all stored mesh information.
+        /// </summary>
         void ClearMeshInfo();
     }
 
+    /// <summary> Manages meshing operations for the NRSDK. </summary>
     public class NRMeshingManager : SingletonBehaviour<NRMeshingManager>
     {
-        /// The size of the bounding box
+        /// <summary> The radius for meshing. </summary>
         [SerializeField]
-        private Vector3 m_BoundingBoxSize;
+        private float m_MeshingRadius;
+        /// <summary> The rate at which meshing updates are submitted. </summary>
         [SerializeField]
-        private float m_MeshRequestInterval;
+        private float m_MeshingSubmitRate;
+        /// <summary> Array of mesh info processors. </summary>
         IMeshInfoProcessor[] m_MeshInfoProcessors;
 
+        /// <summary> Native meshing component. </summary>
         private NativeMeshing m_NativeMeshing;
+        /// <summary> Coroutine for meshing request operations. </summary>
         Coroutine m_MeshingCoroutine;
+        /// <summary> Time counter for controlling mesh update rate. </summary>
         float m_MeshUpdateTime = 0;
-        Func<KeyValuePair<ulong, BlockInfo>, bool> m_Predicate = new Func<KeyValuePair<ulong, BlockInfo>, bool>(
-            p => p.Value.blockState != NRMeshingBlockState.NR_MESHING_BLOCK_STATE_UNCHANGED);
+        /// <summary> Predicate for mesh block state. </summary>
+        Func<BlockInfo, bool> m_Predicate = new Func<BlockInfo, bool>(
+            p => p.blockState != NRMeshingBlockState.NR_MESHING_BLOCK_STATE_UNCHANGED);
 
-        /// <summary> Starts this object. </summary>
+        /// <summary>
+        /// Initializes meshing settings and components when the object starts.
+        /// </summary>
         private void Start()
         {
             if (isDirty)
                 return;
-            NRDebugger.Info("[NRMeshingManager] Start");
-            m_NativeMeshing = new NativeMeshing();
-            m_NativeMeshing.Create();
-            m_NativeMeshing.Start();
-            m_NativeMeshing.SetMeshingFlags(NRMeshingFlags.NR_MESHING_FLAGS_COMPUTE_NORMAL);
-            m_MeshInfoProcessors = GetComponents<IMeshInfoProcessor>();
+            NRSessionManager.Instance.NRHMDPoseTracker.OnModeChanged += (result) =>
+            {
+                if (result.success)
+                {
+                    if (m_NativeMeshing != null)
+                    {
+                        m_NativeMeshing.DestroyMeshInfo();
+                        m_NativeMeshing = null;
+                        foreach (var processor in m_MeshInfoProcessors)
+                            processor.ClearMeshInfo();
+                    }
+                    StartMeshing();
+                }
+            };
+            StartMeshing();
         }
 
+        void StartMeshing()
+        {
+            if (NRSessionManager.Instance.NRHMDPoseTracker.TrackingMode == TrackingType.Tracking6Dof)
+            {
+                NRDebugger.Info("[NRMeshingManager] Start");
+                EnableMeshing();
+                m_NativeMeshing = new NativeMeshing(NRSessionManager.Instance.NativeAPI);
+                m_NativeMeshing.SetMeshingFlags(NRMeshingFlags.NR_MESHING_FLAGS_COMPUTE_NORMAL);
+                m_NativeMeshing.SetMeshingRadius(m_MeshingRadius);
+                m_MeshingSubmitRate = Mathf.Clamp(m_MeshingSubmitRate, 0.2f, 10f);
+                m_NativeMeshing.SetMeshingSubmitRate(m_MeshingSubmitRate);
+                m_MeshInfoProcessors = GetComponents<IMeshInfoProcessor>();
+            }
+        }
+
+        /// <summary>
+        /// Updates the meshing request process based on a specified submission rate.
+        /// </summary>
         void Update()
         {
-            if (m_MeshingCoroutine == null)
+            if (m_NativeMeshing != null)
             {
                 m_MeshUpdateTime += Time.deltaTime;
-                if (m_MeshUpdateTime >= m_MeshRequestInterval)
+                if (m_MeshUpdateTime * m_MeshingSubmitRate >= 1)
                 {
-                    RequestMeshing();
-                    m_MeshUpdateTime = 0;
+                    if (m_MeshingCoroutine == null)
+                    {
+                        RequestMeshing();
+                        m_MeshUpdateTime = 0;
+                    }
                 }
             }
         }
 
+        /// <summary>
+        /// Enables meshing functionality when the application resumes.
+        /// </summary>
+        /// <param name="pause"> Enables meshing functionality when the application resumes. </param>
+        void OnApplicationPause(bool pause)
+        {
+            if (!pause)
+            {
+                EnableMeshing();
+            }
+        }
+
+        /// <summary>
+        /// Enable the meshing functionality.
+        /// </summary>
+        private void EnableMeshing()
+        {
+#if !UNITY_EDITOR
+            NRSessionManager.Instance.NativeAPI.Configuration.SetMeshingEnabled(true);
+#endif
+        }
+
+        /// <summary>
+        /// Requests meshing information.
+        /// </summary>
         void RequestMeshing()
         {
             if (m_MeshingCoroutine != null)
                 StopCoroutine(m_MeshingCoroutine);
-            m_MeshingCoroutine = StartCoroutine(RequestMeshingCoroutine());
+            m_MeshingCoroutine = StartCoroutine(RequestMeshInfoCoroutine());
         }
 
-        IEnumerator RequestMeshingCoroutine()
-        {
-            yield return RequestMeshInfoCoroutine();
-            yield return RequestMeshDetailCoroutine();
-            m_MeshingCoroutine = null;
-        }
-
+        /// <summary>
+        /// Coroutine for requesting mesh information.
+        /// </summary>
         IEnumerator RequestMeshInfoCoroutine()
         {
             NRDebugger.Info("[NRMeshingManager] Start RequestMeshInfoCoroutine");
-            if (m_NativeMeshing.RequestMeshInfo(m_BoundingBoxSize, NRFrame.HeadPose))
+            if (m_NativeMeshing.RequestMeshInfo(m_Predicate))
             {
-                while (!m_NativeMeshing.GetMeshInfoResult())
-                {
-                    NRDebugger.Debug("[NRMeshingManager] Wait GetMeshInfoResult");
-                    yield return null;
-                }
-                var timestamp = m_NativeMeshing.GetMeshInfoTimestamp();
-                NRDebugger.Info("[NRMeshingManager] GetMeshInfoTimestamp: {0}", timestamp);
-                m_NativeMeshing.GetBlockInfoData();
-                m_NativeMeshing.DestroyMeshInfo();
-                m_NativeMeshing.DestroyMeshInfoRequest();
+                yield return m_NativeMeshing.GetMeshInfoData(ProcessMeshDetail);
             }
+            m_NativeMeshing.DestroyMeshInfoRequest();
+            m_MeshingCoroutine = null;
         }
 
-        IEnumerator RequestMeshDetailCoroutine()
-        {
-            NRDebugger.Info("[NRMeshingManager] Start RequestMeshDetailCoroutine");
-            if (m_NativeMeshing.RequestMeshDetail(m_Predicate))
-            {
-                while (!m_NativeMeshing.GetMeshDetailResult())
-                {
-                    NRDebugger.Debug("[NRMeshingManager] Wait GetMeshDetailResult");
-                    yield return null;
-                }
-                var timestamp = m_NativeMeshing.GetMeshDetailTimestamp();
-                NRDebugger.Info("[NRMeshingManager] GetMeshDetailTimestamp: {0}", timestamp);
-                yield return m_NativeMeshing.GetMeshDetailData(ProcessMeshDetail);
-                m_NativeMeshing.DestroyMeshDetail();
-                m_NativeMeshing.DestroyMeshDetailRequest();
-            }
-        }
-
-        void ProcessMeshDetail(ulong identifier, NRMeshingBlockState meshingBlockState, Mesh mesh)
+        /// <summary>
+        /// Processes mesh detail information.
+        /// </summary>
+        /// <param name="identifier">The mesh identifier.</param>
+        /// <param name="meshInfo">The mesh data.</param>
+        void ProcessMeshDetail(ulong identifier, NRMeshInfo meshInfo)
         {
             foreach (var processor in m_MeshInfoProcessors)
             {
-                processor.UpdateMeshInfo(identifier, meshingBlockState, mesh);
-            }
-        }
-
-        /// <summary> Executes the 'application pause' action. </summary>
-        /// <param name="pause"> True to pause.</param>
-        private void OnApplicationPause(bool pause)
-        {
-            NRDebugger.Info("[NRMeshingManager] OnApplicationPause: {0}", pause);
-            if (m_NativeMeshing != null)
-            {
-                if (pause)
-                {
-                    m_NativeMeshing.Pause();
-                }
-                else
-                {
-                    m_NativeMeshing.Resume();
-                }
-            }
-        }
-
-        protected override void OnDestroy()
-        {
-            NRDebugger.Info("[NRMeshingManager] OnDestroy");
-            base.OnDestroy();
-            if (m_NativeMeshing != null)
-            {
-                m_NativeMeshing.Stop();
-                m_NativeMeshing.Destroy();
+                NRDebugger.Debug($"[{this.GetType()}] {nameof(ProcessMeshDetail)} {processor.GetType()} {meshInfo.state}");
+                processor.UpdateMeshInfo(identifier,meshInfo);
             }
         }
     }

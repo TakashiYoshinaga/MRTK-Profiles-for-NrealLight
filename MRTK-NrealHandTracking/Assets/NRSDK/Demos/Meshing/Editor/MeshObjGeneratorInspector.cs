@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -35,7 +35,10 @@ namespace NRKernal.NRExamples
                             sr.Close();
                             Mesh mesh = MeshSaver.StringToMesh(meshData);
                             ulong.TryParse(file.Name.Substring(0, file.Name.IndexOf(".")), out ulong identifier);
-                            (serializedObject.targetObject as IMeshInfoProcessor).UpdateMeshInfo(identifier, NRMeshingBlockState.NR_MESHING_BLOCK_STATE_NEW, mesh);
+                            (serializedObject.targetObject as IMeshInfoProcessor).UpdateMeshInfo(identifier, new NRMeshInfo { 
+                                baseMesh = mesh,
+                                state = NRMeshingBlockState.NR_MESHING_BLOCK_STATE_NEW
+                            });
                         }
                     }
                 }

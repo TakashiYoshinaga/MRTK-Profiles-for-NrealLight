@@ -1,9 +1,9 @@
-﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+/****************************************************************************
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -22,7 +22,7 @@ namespace NRKernal.NRExamples
 #endif
 
     /// <summary> A photo capture example. </summary>
-    [HelpURL("https://developer.nreal.ai/develop/unity/video-capture")]
+    [HelpURL("https://developer.xreal.com/develop/unity/video-capture")]
     public class PhotoCaptureExample : MonoBehaviour
     {
         /// <summary> The photo capture object. </summary>
@@ -65,7 +65,7 @@ namespace NRKernal.NRExamples
                 CameraParameters cameraParameters = new CameraParameters();
                 cameraParameters.cameraResolutionWidth = m_CameraResolution.width;
                 cameraParameters.cameraResolutionHeight = m_CameraResolution.height;
-                cameraParameters.pixelFormat = CapturePixelFormat.BGRA32;
+                cameraParameters.pixelFormat = CapturePixelFormat.PNG;
                 cameraParameters.frameRate = NativeConstants.RECORD_FPS_DEFAULT;
                 cameraParameters.blendMode = BlendMode.Blend;
 
@@ -130,22 +130,24 @@ namespace NRKernal.NRExamples
             quad.transform.forward = headTran.forward;
             quad.transform.localScale = new Vector3(1.6f, 0.9f, 0);
             quadRenderer.material.SetTexture("_MainTex", targetTexture);
-            SaveTextureAsPNG(targetTexture);
+            SaveTextureAsPNG(photoCaptureFrame);
 
-            SaveTextureToGallery(targetTexture);
+            SaveTextureToGallery(photoCaptureFrame);
             // Release camera resource after capture the photo.
             this.Close();
         }
 
-        void SaveTextureAsPNG(Texture2D _texture)
+        void SaveTextureAsPNG(PhotoCaptureFrame photoCaptureFrame)
         {
+            if (photoCaptureFrame.TextureData == null)
+                return;
             try
             {
-                string filename = string.Format("Nreal_Shot_{0}.png", NRTools.GetTimeStamp().ToString());
-                string path = string.Format("{0}/NrealShots", Application.persistentDataPath);
+                string filename = string.Format("Xreal_Shot_{0}.png", NRTools.GetTimeStamp().ToString());
+                string path = string.Format("{0}/XrealShots", Application.persistentDataPath);
                 string filePath = string.Format("{0}/{1}", path, filename);
 
-                byte[] _bytes = _texture.EncodeToPNG();
+                byte[] _bytes = photoCaptureFrame.TextureData;
                 NRDebugger.Info("Photo capture: {0}Kb was saved to [{1}]",  _bytes.Length / 1024, filePath);
                 if (!Directory.Exists(path))
                 {
@@ -191,12 +193,14 @@ namespace NRKernal.NRExamples
             m_PhotoCaptureObject = null;
         }
 
-        public void SaveTextureToGallery(Texture2D _texture)
+        public void SaveTextureToGallery(PhotoCaptureFrame photoCaptureFrame)
         {
+            if (photoCaptureFrame.TextureData == null)
+                return;
             try
             {
-                string filename = string.Format("Nreal_Shot_{0}.png", NRTools.GetTimeStamp().ToString());
-                byte[] _bytes = _texture.EncodeToPNG();
+                string filename = string.Format("Xreal_Shot_{0}.png", NRTools.GetTimeStamp().ToString());
+                byte[] _bytes = photoCaptureFrame.TextureData;
                 NRDebugger.Info(_bytes.Length / 1024 + "Kb was saved as: " + filename);
                 if (galleryDataTool == null)
                 {

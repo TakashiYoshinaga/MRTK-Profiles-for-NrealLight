@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/               
+* https://www.xreal.com/               
 * 
 *****************************************************************************/
 
@@ -37,7 +37,7 @@ namespace NRKernal
             NRHMDPoseTracker.OnChangeTrackingMode += OnChangeTrackingMode;
         }
 
-        private void OnChangeTrackingMode(NRHMDPoseTracker.TrackingType origin, NRHMDPoseTracker.TrackingType target)
+        private void OnChangeTrackingMode(TrackingType origin, TrackingType target)
         {
             m_CameraTarget.transform.position = Vector3.zero;
             m_CameraTarget.transform.rotation = Quaternion.identity;
@@ -56,7 +56,7 @@ namespace NRKernal
         void UpdateHeadPosByInput()
         {
             var trackMode = NRSessionManager.Instance.NRHMDPoseTracker.TrackingMode;
-            if (trackMode == NRHMDPoseTracker.TrackingType.Tracking0Dof)
+            if (trackMode == TrackingType.Tracking0Dof)
                 return;
 
             Vector3 pos = m_CameraTarget.transform.position;
@@ -70,11 +70,11 @@ namespace NRKernal
                 q = Quaternion.Euler(mouseMove);
             }
 
-            if (trackMode == NRHMDPoseTracker.TrackingType.Tracking0DofStable)
+            if (trackMode == TrackingType.Tracking0DofStable)
             {
                 q = Quaternion.Slerp(q, Quaternion.identity, m_HeadRotationLerpSpeed * Time.deltaTime);
             }
-            else if (trackMode == NRHMDPoseTracker.TrackingType.Tracking6Dof)
+            else if (trackMode == TrackingType.Tracking6Dof)
             {
                 Vector3 p = GetBaseInput();
                 p = p * HeadMoveSpeed * Time.deltaTime;
@@ -107,6 +107,15 @@ namespace NRKernal
                 p_Velocity += m_CameraTarget.transform.right.normalized;
             }
             return p_Velocity;
+        }
+
+        private void OnDestroy()
+        {
+            if (m_CameraTarget != null)
+            {
+                GameObject.Destroy(m_CameraTarget);
+                m_CameraTarget = null;
+            }
         }
     }
 #endif

@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/         
+* https://www.xreal.com/         
 * 
 *****************************************************************************/
 
@@ -30,6 +30,7 @@ namespace NRKernal
         Victory,
         Call,
         System,
+        ThumbsUp,
     }
 
     public enum HandJointID
@@ -69,7 +70,16 @@ namespace NRKernal
         public bool isTracked;
         public Pose pointerPose;
         public bool pointerPoseValid;
-        public bool isPinching => currentGesture == HandGesture.Pinch;
+        public UInt64 imageTimestamp;
+        public bool isPinching
+        {
+            get =>
+#if UNITY_EDITOR
+                Input.GetKey(KeyCode.Mouse0) ||
+#endif
+                currentGesture == HandGesture.Pinch;
+        }
+
         public HandGesture currentGesture;
         public float confidence;
         public readonly Dictionary<HandJointID, Pose> jointsPoseDict = new Dictionary<HandJointID, Pose>();

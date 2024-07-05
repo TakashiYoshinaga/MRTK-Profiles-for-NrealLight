@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -52,10 +52,12 @@ namespace NRKernal
 			if (projectConfig == null && !BuildPipeline.isBuildingPlayer)
 			{
 				projectConfig = ScriptableObject.CreateInstance<NRProjectConfig>();
-				projectConfig.targetDeviceTypes = new List<NRDeviceType>();
-				projectConfig.targetDeviceTypes.Add(NRDeviceType.NrealLight);
-				projectConfig.targetDeviceTypes.Add(NRDeviceType.NrealAir);
-				AssetDatabase.CreateAsset(projectConfig, projectConfigAssetPath);
+                projectConfig.targetDevices = new List<NRDeviceCategory>
+                {
+                    NRDeviceCategory.REALITY,
+                    NRDeviceCategory.VISION
+                };
+                AssetDatabase.CreateAsset(projectConfig, projectConfigAssetPath);
 			}
 			return projectConfig;
 		}
@@ -108,6 +110,26 @@ namespace NRKernal
             }
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+        }
+
+        public static void ApplySupportMultiResumeConfig()
+        {
+	        var projectConfig = GetProjectConfig();
+	        bool supportMultiResume = projectConfig.supportMultiResume;
+	        var multiResumeAARGuids = AssetDatabase.FindAssets("nractivitylife-release");
+	        foreach (var item in multiResumeAARGuids)
+	        {
+		        string path = AssetDatabase.GUIDToAssetPath(item);
+		        PluginImporter importer = (PluginImporter)AssetImporter.GetAtPath(path);
+		        if (importer != null)
+		        {
+			        importer.SetCompatibleWithPlatform(BuildTarget.Android, supportMultiResume);
+			        importer.SaveAndReimport();
+		        }
+		        
+	        }
+	        AssetDatabase.SaveAssets();
+	        AssetDatabase.Refresh();
         }
 	}
 }

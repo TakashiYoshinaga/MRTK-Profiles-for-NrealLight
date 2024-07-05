@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/         
+* https://www.xreal.com/         
 * 
 *****************************************************************************/
 
@@ -19,7 +19,6 @@ namespace NRKernal
         private readonly Dictionary<HandEnum, NRHand> m_HandsDict;
         private readonly HandState[] m_HandStates; // index 0 represents right and index 1 represents left
         private readonly OneEuroFilter[] m_OneEuroFilters;
-        private IHandStatesService m_HandStatesService;
         private bool m_Inited;
 
         public Action OnHandTrackingStarted;
@@ -33,11 +32,7 @@ namespace NRKernal
         {
             get
             {
-                if (m_HandStatesService != null)
-                {
-                    return m_HandStatesService.IsRunning;
-                }
-                return false;
+                return NRInput.CurrentInputSourceType == InputSourceEnum.Hands;
             }
         }
 
@@ -81,21 +76,10 @@ namespace NRKernal
         /// <summary>
         /// Init hand tracking with a certain service
         /// </summary>
-        /// <param name="handStatesService"></param>
-        internal void Init(IHandStatesService handStatesService = null)
+        internal void Init()
         {
             if (m_Inited)
                 return;
-
-            m_HandStatesService = handStatesService;
-            if (m_HandStatesService == null)
-            {
-#if UNITY_EDITOR
-                m_HandStatesService = new NREmulatorHandStatesService();
-#else
-                m_HandStatesService = new NRHandStatesService();
-#endif
-            }
 
             NRInput.OnControllerStatesUpdated += UpdateHandTracking;
             m_Inited = true;
@@ -112,23 +96,16 @@ namespace NRKernal
             {
                 Init();
             }
-
-            if (IsRunning)
+            else if (IsRunning)
             {
                 NRDebugger.Info("[HandsManager] Hand Tracking Start: Success");
                 return true;
             }
 
-            if (m_HandStatesService != null && m_HandStatesService.RunService())
-            {
-                NRDebugger.Info("[HandsManager] Hand Tracking Start: Success");
-                NRInput.SwitchControllerProvider(typeof(NRHandControllerProvider));
-                OnHandTrackingStarted?.Invoke();
-                return true;
-            }
-
-            NRDebugger.Info("[HandsManager] Hand Tracking Start: Failed");
-            return false;
+            NRDebugger.Info("[HandsManager] Hand Tracking Start: Success");
+            NRInput.SwitchControllerProvider(typeof(NRHandControllerProvider));
+            OnHandTrackingStarted?.Invoke();
+            return true;
         }
 
         /// <summary>
@@ -149,16 +126,11 @@ namespace NRKernal
                 return true;
             }
 
-            if (m_HandStatesService != null && m_HandStatesService.StopService())
-            {
-                NRDebugger.Info("[HandsManager] Hand Tracking Stop: Success");
-                NRInput.SwitchControllerProvider(ControllerProviderFactory.controllerProviderType);
-                ResetHandStates();
-                OnHandTrackingStopped?.Invoke();
-                return true;
-            }
-            NRDebugger.Info("[HandsManager] Hand Tracking Stop: Failed");
-            return false;
+            NRDebugger.Info("[HandsManager] Hand Tracking Stop: Success");
+            NRInput.SwitchControllerProvider(ControllerProviderFactory.controllerProviderType);
+            ResetHandStates();
+            OnHandTrackingStopped?.Invoke();
+            return true;
         }
 
         /// <summary>
@@ -181,7 +153,7 @@ namespace NRKernal
         }
 
         /// <summary>
-        /// Get the left or right NRHand if it has been registed.
+        /// Get the left or right NRHand if it has been registered.
         /// </summary>
         /// <param name="handEnum"></param>
         /// <returns></returns>
@@ -226,7 +198,6 @@ namespace NRKernal
         {
             if (!IsRunning)
                 return;
-            m_HandStatesService.UpdateStates(m_HandStates);
             UpdateHandPointer();
             OnHandStatesUpdated?.Invoke();
         }
@@ -241,6 +212,38 @@ namespace NRKernal
 
                 CalculatePointerPose(handState);
             }
+        }
+
+        private Vector3 GetNeckPosition()
+        {
+            Vector3 neckOffset = new Vector3(0, -0.15f, 0);
+            Vector3 neckPosition = NRInput.CameraCenter.position +
+                Vector3.Lerp(NRInput.CameraCenter.rotation * neckOffset, neckOffset, 0.5f);
+            return neckPosition;
+        }
+
+        private Vector3 GetShoulderPosition(bool isRight)
+        {
+            Vector3 shoulderOffset = new Vector3(isRight ? 0.15f : -0.15f, 0, 0);
+            Vector3 shoulderPosition = GetNeckPosition() +
+                Quaternion.Euler(0, NRInput.CameraCenter.eulerAngles.y, 0) * shoulderOffset;
+            return shoulderPosition;
+        }
+
+        private Vector3 GetWristOffsetPosition(HandState handState)
+        {
+            Vector3 localWristOffset = new Vector3(0, -0.0425f, -0.0652f);
+            var wristPose = handState.GetJointPose(HandJointID.Wrist);
+            Vector3 wristOffset = wristPose.position + wristPose.rotation * localWristOffset;
+            return wristOffset;
+        }
+
+        private Vector3 GetHandRayDirection(HandState handState)
+        {
+            Vector3 shoulderPosition = GetShoulderPosition(handState.handEnum == HandEnum.RightHand);
+            Vector3 rayOrigin = Vector3.Lerp(GetWristOffsetPosition(handState), shoulderPosition, 0.532f);
+            Vector3 indexPosition = handState.GetJointPose(HandJointID.IndexProximal).position;
+            return (indexPosition - rayOrigin).normalized;
         }
 
         private void CalculatePointerPose(HandState handState)
@@ -263,16 +266,8 @@ namespace NRKernal
                                         + middleToRing * 0.01f
                                         + middleToCenter * (handState.handEnum == HandEnum.RightHand ? 0.06f : -0.06f);
 
-                    var handDirection = pointerPosition - wristPose.position;
-                    var handRotation = Quaternion.LookRotation(handDirection);
-                    var handtoCamera = wristPose.position - (cameraTransform.position - 0.08f * cameraTransform.forward);
-                    float handtoCameraY = handtoCamera.y;
-                    handtoCamera.y = 0;
-                    var handtoCameraRot = Quaternion.LookRotation(handtoCamera);
-                    var pointerRotation = Quaternion.Lerp(handtoCameraRot, handRotation, 0.3f)
-                        * Quaternion.Euler(new Vector3(handtoCameraY * -150f - 30f, handState.handEnum == HandEnum.RightHand ? -15f : 15f, 0f));
-                    Vector3 pointerRotationToV3 = pointerRotation * Vector3.forward;
-                    pointerRotation = Quaternion.LookRotation(m_OneEuroFilters[(int)handState.handEnum].Step(Time.realtimeSinceStartup, pointerRotationToV3));
+                    Vector3 pointerDirection = GetHandRayDirection(handState);
+                    Quaternion pointerRotation = Quaternion.LookRotation(m_OneEuroFilters[(int)handState.handEnum].Step(Time.realtimeSinceStartup, pointerDirection));
                     handState.pointerPose = new Pose(pointerPosition, pointerRotation);
                 }
             }

@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -31,7 +31,7 @@ namespace NRKernal
 
         /// <summary> Information describing the raw. </summary>
         [SerializeField]
-        private byte[] m_RawData = null;
+        protected byte[] m_RawData = null;
         /// <summary> Gets information describing the raw. </summary>
         /// <value> Information describing the raw. </value>
         public byte[] RawData
@@ -68,7 +68,7 @@ namespace NRKernal
 #if UNITY_EDITOR
         /// <summary> True if is raw data dirty, false if not. </summary>
         [SerializeField]
-        private bool m_IsRawDataDirty = true;
+        protected bool m_IsRawDataDirty = true;
 
         /// <summary> The CLI version. </summary>
         [SerializeField]
@@ -177,7 +177,7 @@ namespace NRKernal
 
         
         /// <summary> Rebuilds the database asset, if needed. </summary>
-        public void BuildIfNeeded()
+        public virtual void BuildIfNeeded()
         {
             if (!m_IsRawDataDirty)
             {
@@ -254,7 +254,7 @@ namespace NRKernal
 
         
         /// <summary> Updates the clip version. </summary>
-        private void UpdateClipVersion()
+        protected void UpdateClipVersion()
         {
             string cliBinaryPath;
             if (!FindCliBinaryPath(out cliBinaryPath))

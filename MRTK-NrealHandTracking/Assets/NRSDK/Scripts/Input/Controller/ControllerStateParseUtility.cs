@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/         
+* https://www.xreal.com/         
 * 
 *****************************************************************************/
 
@@ -26,7 +26,8 @@ namespace NRKernal
         {
             {ControllerType.CONTROLLER_TYPE_PHONE, typeof(NRPhoneControllerStateParser)},
             {ControllerType.CONTROLLER_TYPE_EDITOR, typeof(NRPhoneControllerStateParser)},
-            {ControllerType.CONTROLLER_TYPE_NREALLIGHT, typeof(NrealLightControllerStateParser)}
+            {ControllerType.CONTROLLER_TYPE_XREALLIGHT, typeof(XrealLightControllerStateParser)},
+            {ControllerType.CONTROLLER_TYPE_HAND, typeof(NRHandControllerStateParser)}
         };
 
         /// <summary> Creates controller state parser. </summary>

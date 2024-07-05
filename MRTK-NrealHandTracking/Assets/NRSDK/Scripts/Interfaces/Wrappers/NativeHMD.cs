@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -28,12 +28,28 @@ namespace NRKernal
             }
         }
 
-        /// <summary> Creates a new bool. </summary>
+        /// <summary> Create this object. </summary>
         /// <returns> True if it succeeds, false if it fails. </returns>
-        public bool Create()
+        public bool Create(UInt64 hmdHandle = 0)
         {
-            NativeResult result = NativeApi.NRHMDCreate(ref m_HmdHandle);
-            NativeErrorListener.Check(result, this, "Create");
+            NRDebugger.Info("[NativeHMD] Create: hmdHandle={0}", hmdHandle);
+            if (hmdHandle == 0)
+            {
+                NativeResult result = NativeApi.NRHMDCreate(ref hmdHandle);
+                NativeErrorListener.Check(result, this, "Create", true);
+            }
+
+            m_HmdHandle = hmdHandle;
+            return m_HmdHandle != 0;
+        }
+
+        /// <summary> Start this object. </summary>
+        /// <returns> True if it succeeds, false if it fails. </returns>
+        public bool Start()
+        {
+            NRDebugger.Info("[NativeHMD] Start");
+            NativeResult result = NativeApi.NRHMDStart(m_HmdHandle);
+            NativeErrorListener.Check(result, this, "Start", true);
             return result == NativeResult.Success;
         }
 
@@ -42,7 +58,7 @@ namespace NRKernal
         public bool Pause()
         {
             NativeResult result = NativeApi.NRHMDPause(m_HmdHandle);
-            NativeErrorListener.Check(result, this, "Pause");
+            NativeErrorListener.Check(result, this, "Pause", true);
             return result == NativeResult.Success;
         }
 
@@ -51,7 +67,7 @@ namespace NRKernal
         public bool Resume()
         {
             NativeResult result = NativeApi.NRHMDResume(m_HmdHandle);
-            NativeErrorListener.Check(result, this, "Resume");
+            NativeErrorListener.Check(result, this, "Resume", true);
             return result == NativeResult.Success;
         }
 
@@ -60,20 +76,16 @@ namespace NRKernal
         /// <returns> The device pose from head. </returns>
         public Pose GetDevicePoseFromHead(NativeDevice device)
         {
-            return GetDevicePoseFromHead((int)device);
-        }
-
-        /// <summary> Gets device pose from head. </summary>
-        /// <param name="device"> The device type.</param>
-        /// <returns> The device pose from head. </returns>
-        public Pose GetDevicePoseFromHead(int device)
-        {
             Pose outDevicePoseFromHead = Pose.identity;
             NativeMat4f mat4f = new NativeMat4f(Matrix4x4.identity);
-            NativeResult result = NativeApi.NRHMDGetEyePoseFromHead(m_HmdHandle, device, ref mat4f);
+            NativeResult result = NativeApi.NRHMDGetComponentPoseFromHead(m_HmdHandle, device, ref mat4f);
             if (result == NativeResult.Success)
             {
                 ConversionUtility.ApiPoseToUnityPose(mat4f, out outDevicePoseFromHead);
+            }
+            else
+            {
+                NRDebugger.Warning($"[{GetType()}] {nameof(GetDevicePoseFromHead)} {device}  result: {result}  posemat: {mat4f}");
             }
             return outDevicePoseFromHead;
         }
@@ -86,69 +98,83 @@ namespace NRKernal
         public bool GetProjectionMatrix(ref EyeProjectMatrixData outEyesProjectionMatrix, float znear, float zfar)
         {
             NativeFov4f fov = new NativeFov4f();
-            NativeResult result_left = NativeApi.NRHMDGetEyeFovInCoord(m_HmdHandle, (int)NativeDevice.LEFT_DISPLAY, ref fov);
+            NativeResult result_left = NativeApi.NRHMDGetComponentFov(m_HmdHandle, NativeDevice.LEFT_DISPLAY, ref fov);
             NativeErrorListener.Check(result_left, this, "GetProjectionMatrix-L");
             NRDebugger.Info("[GetProjectionMatrix] LEFT_DISPLAY: {0}", fov.ToString());
             outEyesProjectionMatrix.LEyeMatrix = ConversionUtility.GetProjectionMatrixFromFov(fov, znear, zfar).ToUnityMat4f();
-            
-            NativeResult result_right = NativeApi.NRHMDGetEyeFovInCoord(m_HmdHandle, (int)NativeDevice.RIGHT_DISPLAY, ref fov);
+
+            NativeResult result_right = NativeApi.NRHMDGetComponentFov(m_HmdHandle, NativeDevice.RIGHT_DISPLAY, ref fov);
             NativeErrorListener.Check(result_right, this, "GetProjectionMatrix-R");
             NRDebugger.Info("[GetProjectionMatrix] RIGHT_DISPLAY: {0}", fov.ToString());
             outEyesProjectionMatrix.REyeMatrix = ConversionUtility.GetProjectionMatrixFromFov(fov, znear, zfar).ToUnityMat4f();
-            
-            NativeResult result_RGB = NativeApi.NRHMDGetEyeFovInCoord(m_HmdHandle, (int)NativeDevice.RGB_CAMERA, ref fov);
+
+            NativeResult result_Center = NativeApi.NRHMDGetComponentFov(m_HmdHandle, NativeDevice.HEAD_CENTER, ref fov);
+            NativeErrorListener.Check(result_Center, this, "GetProjectionMatrix-C");
+            NRDebugger.Info("[GetProjectionMatrix] HEAD_CENTER: {0}", fov.ToString());
+            outEyesProjectionMatrix.CEyeMatrix = ConversionUtility.GetProjectionMatrixFromFov(fov, znear, zfar).ToUnityMat4f();
+
+            NativeResult result_RGB = NativeApi.NRHMDGetComponentFov(m_HmdHandle, NativeDevice.RGB_CAMERA, ref fov);
             NativeErrorListener.Check(result_RGB, this, "GetProjectionMatrix-RGB");
+            NRDebugger.Info("[GetProjectionMatrix] RGBCamera: {0}", fov.ToString());
             outEyesProjectionMatrix.RGBEyeMatrix = ConversionUtility.GetProjectionMatrixFromFov(fov, znear, zfar).ToUnityMat4f();
 
-            return (result_left == NativeResult.Success && result_right == NativeResult.Success && result_RGB == NativeResult.Success);
+            return (result_left == NativeResult.Success && result_right == NativeResult.Success && result_Center == NativeResult.Success && result_RGB == NativeResult.Success);
         }
 
-        [Obsolete("Use 'GetEyeFovInCoord' to replace.")]
-        public NativeFov4f GetEyeFov(NativeEye eye)
+        /// <summary> Gets camera intrinsic matrix. </summary>
+        /// <param name="device">               The target device.</param>
+        /// <param name="CameraIntrinsicMatix"> [in,out] The camera intrinsic matix.</param>
+        /// <returns> The intrinsic matrix of target device. </returns>
+        public NativeFov4f GetEyeFov(NativeDevice device)
         {
             NativeFov4f fov = new NativeFov4f();
-            NativeApi.NRHMDGetEyeFov(m_HmdHandle, (int)eye, ref fov);
-            return fov;
-        }
-
-        public NativeFov4f GetEyeFovInCoord(NativeDevice eye)
-        {
-            NativeFov4f fov = new NativeFov4f();
-            NativeApi.NRHMDGetEyeFovInCoord(m_HmdHandle, (int)eye, ref fov);
+            var result = NativeApi.NRHMDGetComponentFov(m_HmdHandle, device, ref fov);
+            NativeErrorListener.Check(result, this, "GetEyeFov");
             return fov;
         }
 
         /// <summary> Gets camera intrinsic matrix. </summary>
-        /// <param name="eye">                  The eye.</param>
+        /// <param name="camera">               The target camera.</param>
         /// <param name="CameraIntrinsicMatix"> [in,out] The camera intrinsic matix.</param>
         /// <returns> True if it succeeds, false if it fails. </returns>
-        public bool GetCameraIntrinsicMatrix(int eye, ref NativeMat3f CameraIntrinsicMatix)
+        public bool GetCameraIntrinsicMatrix(NativeDevice camera, ref NativeMat3f CameraIntrinsicMatix)
         {
-            var result = NativeApi.NRHMDGetCameraIntrinsicMatrix(m_HmdHandle, (int)eye, ref CameraIntrinsicMatix);
+            var result = NativeApi.NRHMDGetComponentIntrinsic(m_HmdHandle, camera, ref CameraIntrinsicMatix);
             return result == NativeResult.Success;
+        }
+
+        /// <summary> Get the refresh rate of HMD display. </summary>
+        /// <returns> The refresh rate of display. </returns>
+        public UInt32 GetRefreshRate()
+        {
+            UInt32 refreshRate = 60;
+            var result = NativeApi.NRHMDGetComponentRefreshRate(m_HmdHandle, NativeDevice.LEFT_DISPLAY, ref refreshRate);
+            NativeErrorListener.Check(result, this, "GetRefreshRate");
+
+            return refreshRate;
         }
 
         /// <summary> Gets camera distortion. </summary>
-        /// <param name="eye">        The eye.</param>
+        /// <param name="camera">        The camera.</param>
         /// <param name="distortion"> A variable-length parameters list containing distortion.</param>
         /// <returns> True if it succeeds, false if it fails. </returns>
-        public bool GetCameraDistortion(int eye, ref NRDistortionParams distortion)
+        public bool GetCameraDistortion(NativeDevice camera, ref NRDistortionParams distortion)
         {
-            var result = NativeApi.NRHMDGetCameraDistortionParams(m_HmdHandle, eye, ref distortion);
+            var result = NativeApi.NRHMDGetComponentDistortion(m_HmdHandle, camera, ref distortion);
             return result == NativeResult.Success;
         }
 
-        /// <summary> Gets eye resolution. </summary>
-        /// <param name="eye"> The eye.</param>
+        /// <summary> Gets device resolution. </summary>
+        /// <param name="device"> The device.</param>
         /// <returns> The eye resolution. </returns>
-        public NativeResolution GetEyeResolution(int eye)
+        public NativeResolution GetDeviceResolution(NativeDevice device)
         {
             NativeResolution resolution = new NativeResolution(1920, 1080);
 #if UNITY_EDITOR
             return resolution;
 #else
-            var result = NativeApi.NRHMDGetEyeResolution(m_HmdHandle, eye, ref resolution);
-            NativeErrorListener.Check(result, this, "GetEyeResolution");
+            var result = NativeApi.NRHMDGetComponentResolution(m_HmdHandle, device, ref resolution);
+            NativeErrorListener.Check(result, this, "GetDeviceResolution");
             return resolution;
 #endif
         }
@@ -157,9 +183,18 @@ namespace NRKernal
         /// <returns> The device type. </returns>
         public NRDeviceType GetDeviceType()
         {
-            NRDeviceType deviceType = NRDeviceType.NrealLight;
+            NRDeviceType deviceType = NRDeviceType.XrealLight;
             NativeApi.NRHMDGetDeviceType(m_HmdHandle, ref deviceType);
             return deviceType;
+        }
+
+        /// <summary> Gets device category of running device. </summary>
+        /// <returns> The device category. </returns>
+        public NRDeviceCategory GetDeviceCategory()
+        {
+            NRDeviceCategory deviceCategory = NRDeviceCategory.INVALID;
+            NativeApi.NRHMDGetDeviceCategory(m_HmdHandle, ref deviceCategory);
+            return deviceCategory;
         }
 
         /// <summary> Gets device type of running device. </summary>
@@ -172,12 +207,22 @@ namespace NRKernal
             return result;
         }
 
+        /// <summary> Stop this object. </summary>
+        /// <returns> True if it succeeds, false if it fails. </returns>
+        public bool Stop()
+        {
+            NativeResult result = NativeApi.NRHMDStop(m_HmdHandle);
+            NativeErrorListener.Check(result, this, "Stop", true);
+            return result == NativeResult.Success;
+        }
+
         /// <summary> Destroys this object. </summary>
         /// <returns> True if it succeeds, false if it fails. </returns>
         public bool Destroy()
         {
             NativeResult result = NativeApi.NRHMDDestroy(m_HmdHandle);
-            NativeErrorListener.Check(result, this, "Destroy");
+            NativeErrorListener.Check(result, this, "Destroy", true);
+            m_HmdHandle = 0;
             return result == NativeResult.Success;
         }
 
@@ -190,12 +235,25 @@ namespace NRKernal
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRHMDCreate(ref UInt64 out_hmd_handle);
 
+            /// <summary> Nrhmd start. </summary>
+            /// <param name="hmd_handle"> Handle of the hmd.</param>
+            /// <returns> A NativeResult. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRHMDStart(UInt64 hmd_handle);
+
             /// <summary> Nrhmd get device type. </summary>
             /// <param name="hmd_handle">         Handle of the hmd.</param>
             /// <param name="out_device_type"> [in,out] The out device type.</param>
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRHMDGetDeviceType(UInt64 hmd_handle, ref NRDeviceType out_device_type);
+
+            /// <summary> Query the hmd device category. </summary>
+            /// <param name="hmd_handle"> The handle of HMD object. </param>
+            /// <param name="out_device_type"> The category of the hmd Device. </param>
+            /// <returns> The result of operation. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRHMDGetDeviceCategory(UInt64 hmd_handle, ref NRDeviceCategory out_device_category);
 
             /// <summary>
             /// Check whether the current feature is supported.
@@ -221,54 +279,59 @@ namespace NRKernal
 
             /// <summary> Nrhmd get eye pose from head. </summary>
             /// <param name="hmd_handle">         Handle of the hmd.</param>
-            /// <param name="eye">                The eye.</param>
-            /// <param name="outEyePoseFromHead"> [in,out] The out eye pose from head.</param>
+            /// <param name="component">          The component.</param>
+            /// <param name="out_component_pose_from_head"> [in,out] The out component pose from head.</param>
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHMDGetEyePoseFromHead(UInt64 hmd_handle, int eye, ref NativeMat4f outEyePoseFromHead);
+            public static extern NativeResult NRHMDGetComponentPoseFromHead(UInt64 hmd_handle, NativeDevice component, ref NativeMat4f out_component_pose_from_head);
 
             /// <summary> Nrhmd get eye fov. </summary>
             /// <param name="hmd_handle">  Handle of the hmd.</param>
-            /// <param name="eye">         The eye.</param>
-            /// <param name="out_eye_fov"> [in,out] The out eye fov.</param>
+            /// <param name="component">   The component.</param>
+            /// <param name="out_component_fov"> [in,out] Fov of the component.</param>
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            [Obsolete]
-            public static extern NativeResult NRHMDGetEyeFov(UInt64 hmd_handle, int eye, ref NativeFov4f out_eye_fov);
-
-            /// <summary> Nrhmd get eye fov. </summary>
-            /// <param name="hmd_handle">  Handle of the hmd.</param>
-            /// <param name="eye">         The eye.</param>
-            /// <param name="out_eye_fov"> [in,out] The out eye fov.</param>
-            /// <returns> A NativeResult. </returns>
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHMDGetEyeFovInCoord(UInt64 hmd_handle, int eye, ref NativeFov4f out_eye_fov);
+            public static extern NativeResult NRHMDGetComponentFov(UInt64 hmd_handle, NativeDevice component, ref NativeFov4f out_component_fov);
 
             /// <summary> Nrhmd get camera intrinsic matrix. </summary>
             /// <param name="hmd_handle">           Handle of the hmd.</param>
-            /// <param name="eye">                  The eye.</param>
+            /// <param name="camera">               The camera.</param>
             /// <param name="out_intrinsic_matrix"> [in,out] The out intrinsic matrix.</param>
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHMDGetCameraIntrinsicMatrix(
-                    UInt64 hmd_handle, int eye, ref NativeMat3f out_intrinsic_matrix);
+            public static extern NativeResult NRHMDGetComponentIntrinsic(
+                    UInt64 hmd_handle, NativeDevice camera, ref NativeMat3f out_intrinsic_matrix);
+
+            /// <summary> Get the refresh rate of HMD display. </summary>
+            /// <param name="hmd_handle"> Handle of the hmd.</param>
+            /// <param name="out_fresh_rate"> The refresh rate of display.</param>
+            /// <returns> A NativeResult. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRHMDGetComponentRefreshRate(
+                    UInt64 hmd_handle, NativeDevice component, ref UInt32 out_fresh_rate);
 
             /// <summary> Nrhmd get camera distortion parameters. </summary>
             /// <param name="hmd_handle"> Handle of the hmd.</param>
-            /// <param name="eye">        The eye.</param>
+            /// <param name="camera">     The camera.</param>
             /// <param name="out_params"> A variable-length parameters list containing out parameters.</param>
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHMDGetCameraDistortionParams(
-                    UInt64 hmd_handle, int eye, ref NRDistortionParams out_params);
+            public static extern NativeResult NRHMDGetComponentDistortion(
+                    UInt64 hmd_handle, NativeDevice camera, ref NRDistortionParams out_params);
 
             /// <summary> Nrhmd get eye resolution. </summary>
             /// <param name="hmd_handle">         Handle of the hmd.</param>
-            /// <param name="eye">                The eye.</param>
-            /// <param name="out_eye_resolution"> [in,out] The out eye resolution.</param>
+            /// <param name="component">          The component.</param>
+            /// <param name="out_component_resolution"> [in,out] Resolution of the component.</param>
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHMDGetEyeResolution(UInt64 hmd_handle, int eye, ref NativeResolution out_eye_resolution);
+            public static extern NativeResult NRHMDGetComponentResolution(UInt64 hmd_handle, NativeDevice component, ref NativeResolution out_component_resolution);
+
+            /// <summary> Nrhmd stop. </summary>
+            /// <param name="hmd_handle"> Handle of the hmd.</param>
+            /// <returns> A NativeResult. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRHMDStop(UInt64 hmd_handle);
 
             /// <summary> Nrhmd destroy. </summary>
             /// <param name="hmd_handle"> Handle of the hmd.</param>

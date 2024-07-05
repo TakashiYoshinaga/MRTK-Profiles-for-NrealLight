@@ -1,9 +1,9 @@
 /****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -17,7 +17,7 @@ namespace NRKernal.NRExamples
         /// <summary> The anchor. </summary>
         [Header("Window Settings")]
         [SerializeField, Tooltip("What part of the view port to anchor the window to.")]
-        private TextAnchor Anchor = TextAnchor.LowerCenter;
+        private TextAnchor Anchor = TextAnchor.MiddleCenter;
         /// <summary> The follow speed. </summary>
         [SerializeField, Range(0.0f, 100.0f), Tooltip("How quickly to interpolate the window towards its target position and rotation.")]
         private float FollowSpeed = 5.0f;

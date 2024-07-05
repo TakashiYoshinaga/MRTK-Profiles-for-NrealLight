@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -122,7 +122,7 @@ namespace NRKernal.Record
         public NativeEncodeConfig(CameraParameters cameraparam, string path = "")
         {
             this.width = cameraparam.blendMode == BlendMode.WidescreenBlend ? 2 * cameraparam.cameraResolutionWidth : cameraparam.cameraResolutionWidth;
-            this.height = cameraparam.cameraResolutionHeight;
+            this.height = cameraparam.captureSide == CaptureSide.Both ? (int)(0.5 * cameraparam.cameraResolutionHeight): cameraparam.cameraResolutionHeight;
             this.bitRate = NativeConstants.RECORD_VIDEO_BITRATE_DEFAULT;
             this.fps = cameraparam.frameRate;
             this.codecType = GetCodecTypeByPath(path);
@@ -131,7 +131,7 @@ namespace NRKernal.Record
             this.addMicphoneAudio = cameraparam.CaptureAudioMic;
             this.addInternalAudio = cameraparam.CaptureAudioApplication;
             this.useAlpha = cameraparam.hologramOpacity < float.Epsilon;
-            this.useLinnerTexture = NRRenderer.isLinearColorSpace;
+            this.useLinnerTexture = NRFrame.isLinearColorSpace;
             this.audioBitRate = NativeConstants.RECORD_AUDIO_BITRATE_DEFAULT;
             this.audioSampleRate = NativeConstants.RECORD_AUDIO_SAMPLERATE_DEFAULT;
         }

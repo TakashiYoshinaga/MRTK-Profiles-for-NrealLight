@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -13,7 +13,7 @@ using UnityEngine;
 namespace NRKernal.NRExamples
 {
     /// <summary> A guide to show how to use plane detect. </summary>
-    [HelpURL("https://developer.nreal.ai/develop/discover/introduction-nrsdk")]
+    [HelpURL("https://developer.xreal.com/develop/discover/introduction-nrsdk")]
     public class PlaneDetector : MonoBehaviour
     {
         /// <summary> Detected plane prefab. </summary>

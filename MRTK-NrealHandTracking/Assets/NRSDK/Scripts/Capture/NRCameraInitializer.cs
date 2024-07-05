@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -62,6 +62,13 @@ namespace NRKernal.Record
                     transform.localPosition = eyeposFromHead.REyePose.position;
                     transform.localRotation = eyeposFromHead.REyePose.rotation;
                     NRDebugger.Info("[NRCameraInitializer] Right Camera pos:{0} rotation:{1}", transform.localPosition.ToString(), transform.localRotation.ToString());
+                    break;
+                case NativeDevice.HEAD_CENTER:
+                    m_TargetCamera.projectionMatrix = matrix_data.CEyeMatrix;
+                    NRDebugger.Info("[NRCameraInitializer] Center Camera Project Matrix :" + m_TargetCamera.projectionMatrix.ToString());
+                    transform.localPosition = eyeposFromHead.CEyePose.position;
+                    transform.localRotation = eyeposFromHead.CEyePose.rotation;
+                    NRDebugger.Info("[NRCameraInitializer] Center Camera pos:{0} rotation:{1}", transform.localPosition.ToString(), transform.localRotation.ToString());
                     break;
                 case NativeDevice.RGB_CAMERA:
                     m_TargetCamera.projectionMatrix = matrix_data.RGBEyeMatrix;

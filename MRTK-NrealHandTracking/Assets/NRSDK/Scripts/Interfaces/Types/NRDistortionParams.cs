@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/                  
+* https://www.xreal.com/                  
 * 
 *****************************************************************************/
 
@@ -18,6 +18,8 @@ namespace NRKernal
         NR_CAMERA_MODEL_RADIAL = 1,
         /// <summary> An enum constant representing the nr camera model fisheye option. </summary>
         NR_CAMERA_MODEL_FISHEYE = 2,
+        /// <summary> An enum constant representing the nr camera model fisheye624 option. </summary>
+        NR_CAMERA_MODEL_FISHEYE624 = 3,
     }
 
     /// <summary>
@@ -31,33 +33,15 @@ namespace NRKernal
         [MarshalAs(UnmanagedType.I4)]
         public NRCameraModel cameraModel;
         /// <summary> The first distort parameters. </summary>
-        [MarshalAs(UnmanagedType.R4)]
-        public float distortParams1;
-        /// <summary> The second distort parameters. </summary>
-        [MarshalAs(UnmanagedType.R4)]
-        public float distortParams2;
-        /// <summary> The third distort parameters. </summary>
-        [MarshalAs(UnmanagedType.R4)]
-        public float distortParams3;
-        /// <summary> The fourth distort parameters. </summary>
-        [MarshalAs(UnmanagedType.R4)]
-        public float distortParams4;
-        /// <summary> The fifth distort parameters. </summary>
-        [MarshalAs(UnmanagedType.R4)]
-        public float distortParams5;
-        /// <summary> The distort parameters 6. </summary>
-        [MarshalAs(UnmanagedType.R4)]
-        public float distortParams6;
-        /// <summary> The distort parameters 7. </summary>
-        [MarshalAs(UnmanagedType.R4)]
-        public float distortParams7;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+        public float[] distortParams;
 
         /// <summary> Convert this object into a string representation. </summary>
         /// <returns> A string that represents this object. </returns>
         public override string ToString()
         {
-            return string.Format("cameraModel:{0} distortParams1:{1} distortParams2:{2} distortParams3:{3} distortParams4:{4} distortParams5:{5} distortParams6:{6} distortParams7:{7}",
-                cameraModel, distortParams1, distortParams2, distortParams3, distortParams4, distortParams5, distortParams6, distortParams7);
+            return string.Format("cameraModel:{0} distortParams0:{1} distortParams1:{2} distortParams2:{3} distortParams3:{4} distortParams4:{5} distortParams5:{6} distortParams6:{7}",
+                cameraModel, distortParams[0], distortParams[1], distortParams[2], distortParams[3], distortParams[4], distortParams[5], distortParams[6]);
         }
     }
 }

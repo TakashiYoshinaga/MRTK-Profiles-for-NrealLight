@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -18,14 +18,16 @@ namespace NRKernal
 
         ulong GetHMDTimeNanos();
 
-        bool GetFramePresentHeadPose(ref Pose pose, ref LostTrackingReason lostReason, ref UInt64 timestamp);
+        bool GetFramePresentHeadPose(ref Pose pose, ref LostTrackingReason lostReason, ref UInt64 timeStamp);
 
-        bool GetFramePresentTimeByCount(int count, ref UInt64 timestamp);
+        bool GetFramePresentTimeByCount(uint count, ref UInt64 timestamp);
 
-        bool InitTrackingMode(TrackingMode mode);
+        bool InitTrackingType(TrackingType type);
 
-        bool SwitchTrackingMode(TrackingMode mode);
+        bool SwitchTrackingType(TrackingType type);
 
         void Recenter();
+
+        void RegistInputSubSystemEventCallback(Action<bool> callback);
     }
 }

@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -13,7 +13,7 @@ using System;
 
 public class NRStubHelper : ScriptableObject
 {
-	// Stub helper class to locate NReal Utilities Path through Unity Editor API.
+	// Stub helper class to locate XReal Utilities Path through Unity Editor API.
 	public static bool IsInsideUnityPackage()
 	{
 		var so = ScriptableObject.CreateInstance(typeof(NRStubHelper));

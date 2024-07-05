@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 using UnityEngine;
@@ -18,7 +18,8 @@ namespace NRKernal
 		SerializedProperty ImageTrackingMode;
 		SerializedProperty TrackingImageDatabase;
 		SerializedProperty EnableNotification;
-		SerializedProperty ForceKillWhileGlassSwitchMode;
+		SerializedProperty ForceKillWhileGlassesSwitchMode;
+		SerializedProperty SupportMonoMode;
 		SerializedProperty GlassesErrorTipPrefab;
 		SerializedProperty TrackingModeChangeTipPrefab;
 		SerializedProperty ProjectConfig;
@@ -33,7 +34,8 @@ namespace NRKernal
 			ImageTrackingMode 			= serializedObject.FindProperty("ImageTrackingMode");
 			TrackingImageDatabase 		= serializedObject.FindProperty("TrackingImageDatabase");
 			EnableNotification 			= serializedObject.FindProperty("EnableNotification");
-			ForceKillWhileGlassSwitchMode 			= serializedObject.FindProperty("ForceKillWhileGlassSwitchMode");
+			ForceKillWhileGlassesSwitchMode 			= serializedObject.FindProperty("ForceKillWhileGlassesSwitchMode");
+			SupportMonoMode 			= serializedObject.FindProperty("SupportMonoMode");
 			GlassesErrorTipPrefab 		= serializedObject.FindProperty("GlassesErrorTipPrefab");
 			TrackingModeChangeTipPrefab = serializedObject.FindProperty("TrackingModeChangeTipPrefab");
 			ProjectConfig				= serializedObject.FindProperty("ProjectConfig");
@@ -52,7 +54,10 @@ namespace NRKernal
 			EditorGUILayout.PropertyField(ImageTrackingMode);
 			EditorGUILayout.PropertyField(TrackingImageDatabase);
 			EditorGUILayout.PropertyField(EnableNotification);
-			EditorGUILayout.PropertyField(ForceKillWhileGlassSwitchMode);
+			EditorGUILayout.PropertyField(ForceKillWhileGlassesSwitchMode);
+#if ENABLE_MONO_MODE
+			EditorGUILayout.PropertyField(SupportMonoMode);
+#endif
 
 			EditorGUILayout.Space();
 			EditorGUILayout.PropertyField(GlassesErrorTipPrefab);

@@ -1,11 +1,15 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
+
+#if USING_XR_MANAGEMENT && USING_XR_SDK_XREAL
+#define USING_XR_SDK
+#endif
 
 namespace NRKernal
 {
@@ -18,7 +22,7 @@ using Windows.System;
 #endif
 
     /// <summary>
-    /// ABOUT: The VisualProfiler provides a drop in, single file, solution for viewing your Nreal
+    /// ABOUT: The VisualProfiler provides a drop in, single file, solution for viewing your Xreal
     /// Unity application's frame rate and memory usage. Missed frames are displayed over time to
     /// visually find problem areas. Memory is reported as current, peak and max usage in a bar graph.
     /// 
@@ -26,7 +30,7 @@ using Windows.System;
     /// Unity scene. The profiler is initially active and visible (toggle-able via the IsVisible
     /// property), but can be toggled via the enabled/disable voice commands keywords.
     /// 
-    /// NOTE: For improved rendering performance you can optionally include the "Nreal/Instanced-
+    /// NOTE: For improved rendering performance you can optionally include the "Xreal/Instanced-
     /// Colored" shader in your project along with the VisualProfiler. </summary>
     public class NRVisualProfiler : MonoBehaviour
     {
@@ -291,7 +295,7 @@ using Windows.System;
         {
             if (defaultMaterial == null)
             {
-                defaultMaterial = new Material(Shader.Find("Nreal/Instanced-Colored"));
+                defaultMaterial = new Material(Shader.Find("Xreal/Instanced-Colored"));
                 defaultMaterial.SetFloat("_ZWrite", 0.0f);
                 defaultMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.Disabled);
                 defaultMaterial.renderQueue = 5000;
@@ -299,7 +303,7 @@ using Windows.System;
 
             if (defaultInstancedMaterial == null)
             {
-                Shader defaultInstancedShader = Shader.Find("Nreal/Instanced-Colored");
+                Shader defaultInstancedShader = Shader.Find("Xreal/Instanced-Colored");
 
                 if (defaultInstancedShader != null)
                 {
@@ -405,7 +409,9 @@ using Windows.System;
                 cpuFrameRateText.text = cpuFrameRateStrings[Mathf.Clamp(cpuFrameRate, 0, maxTargetFrameRate)];
 #if USING_XR_SDK && !UNITY_EDITOR
                 int dropped_framecount = 0;
-                NRSessionManager.Instance.XRDisplaySubsystem?.TryGetDroppedFrameCount(out dropped_framecount);
+
+                if (NRDevice.XRDisplaySubsystem != null && NRDevice.XRDisplaySubsystem.running)
+                    NRDevice.XRDisplaySubsystem?.TryGetDroppedFrameCount(out dropped_framecount);
                 droppedFrameCount.text = string.Format(droppedFrameCountString, dropped_framecount);
 #endif
 

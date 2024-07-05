@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -31,11 +31,11 @@ namespace NRKernal
 
         /// <summary> Gets raw data. </summary>
         /// <param name="imageHandle"> Handle of the image.</param>
-        /// <param name="eye">         The eye.</param>
+        /// <param name="camera">      The camera.</param>
         /// <param name="ptr">         [in,out] The pointer.</param>
         /// <param name="size">        [in,out] The size.</param>
         /// <returns> True if it succeeds, false if it fails. </returns>
-        public bool GetRawData(UInt64 imageHandle, int eye, ref IntPtr ptr, ref int size)
+        public bool GetRawData(UInt64 imageHandle, NativeDevice camera, ref IntPtr ptr, ref int size)
         {
             if (_IsErrorState)
             {
@@ -50,9 +50,9 @@ namespace NRKernal
 
         /// <summary> Gets a resolution. </summary>
         /// <param name="imageHandle"> Handle of the image.</param>
-        /// <param name="eye">         The eye.</param>
+        /// <param name="camera">      The camera.</param>
         /// <returns> The resolution. </returns>
-        public NativeResolution GetResolution(UInt64 imageHandle, int eye)
+        public NativeResolution GetResolution(UInt64 imageHandle, NativeDevice camera)
         {
             NativeResolution resolution = new NativeResolution(0, 0);
             var result = NativeApi.NRRGBCameraImageGetResolution(m_NativeCameraHandle, imageHandle, ref resolution);
@@ -62,9 +62,9 @@ namespace NRKernal
 
         /// <summary> Gets hmd time nanos. </summary>
         /// <param name="imageHandle"> Handle of the image.</param>
-        /// <param name="eye">         The eye.</param>
+        /// <param name="camera">      The camera.</param>
         /// <returns> The hmd time nanos. </returns>
-        public UInt64 GetHMDTimeNanos(UInt64 imageHandle, int eye)
+        public UInt64 GetHMDTimeNanos(UInt64 imageHandle, NativeDevice camera)
         {
             UInt64 time = 0;
             NativeApi.NRRGBCameraImageGetHMDTimeNanos(m_NativeCameraHandle, imageHandle, ref time);
@@ -73,9 +73,9 @@ namespace NRKernal
 
         /// <summary> Get exposure time. </summary>
         /// <param name="imageHandle"> Handle of the image. </param>
-        /// <param name="eye">         The eye. </param>
+        /// <param name="camera">      The camera. </param>
         /// <returns> Exposure time of the image. </returns>
-        public UInt32 GetExposureTime(UInt64 imageHandle, int eye)
+        public UInt32 GetExposureTime(UInt64 imageHandle, NativeDevice camera)
         {
             UInt32 exposureTime = 0;
             return exposureTime;
@@ -83,9 +83,9 @@ namespace NRKernal
 
         /// <summary> Get Gain. </summary>
         /// <param name="imageHandle"> Handle of the image. </param>
-        /// <param name="eye">         The eye. </param>
+        /// <param name="camera">      The camera. </param>
         /// <returns> Gain of the image. </returns>
-        public UInt32 GetGain(UInt64 imageHandle, int eye)
+        public UInt32 GetGain(UInt64 imageHandle, NativeDevice camera)
         {
             UInt32 gain = 0;
             return gain;
@@ -129,7 +129,7 @@ namespace NRKernal
                 NativeErrorListener.Check(NativeResult.RGBCameraDeviceNotFind, this, "StartCapture", true);
                 return false;
             }
-            var result = NativeApi.NRRGBCameraStartCapture(m_NativeCameraHandle);
+            var result = NativeApi.NRRGBCameraStart(m_NativeCameraHandle);
             _IsErrorState = (result != NativeResult.Success);
             NativeErrorListener.Check(result, this, "StartCapture", true);
             return result == NativeResult.Success;
@@ -143,9 +143,25 @@ namespace NRKernal
             {
                 return false;
             }
-            var result = NativeApi.NRRGBCameraStopCapture(m_NativeCameraHandle);
+            var result = NativeApi.NRRGBCameraStop(m_NativeCameraHandle);
             NativeErrorListener.Check(result, this, "StopCapture", true);
             return result == NativeResult.Success;
+        }
+
+        /// <summary> Pause a capture. </summary>
+        /// <returns> True if it succeeds, false if it fails. </returns>
+        public bool PauseCapture()
+        {
+            NRDebugger.Info("[NativeCamera] PauseCapture skipped.");
+            return true;
+        }
+
+        /// <summary> Resume a capture. </summary>
+        /// <returns> True if it succeeds, false if it fails. </returns>
+        public bool ResumeCapture()
+        {
+            NRDebugger.Info("[NativeCamera] ResumeCapture skipped.");
+            return true;
         }
 
         /// <summary> Destroys the image described by imageHandle. </summary>
@@ -169,6 +185,7 @@ namespace NRKernal
             _IsErrorState = false;
             var result = NativeApi.NRRGBCameraDestroy(m_NativeCameraHandle);
             NativeErrorListener.Check(result, this, "Release");
+            m_NativeCameraHandle = 0;
             return result == NativeResult.Success;
         }
 
@@ -237,13 +254,13 @@ namespace NRKernal
             /// <param name="rgb_camera_handle"> Handle of the RGB camera.</param>
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRRGBCameraStartCapture(UInt64 rgb_camera_handle);
+            public static extern NativeResult NRRGBCameraStart(UInt64 rgb_camera_handle);
 
             /// <summary> Nrrgb camera stop capture. </summary>
             /// <param name="rgb_camera_handle"> Handle of the RGB camera.</param>
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRRGBCameraStopCapture(UInt64 rgb_camera_handle);
+            public static extern NativeResult NRRGBCameraStop(UInt64 rgb_camera_handle);
 
             /// <summary> Nrrgb camera image destroy. </summary>
             /// <param name="rgb_camera_handle">       Handle of the RGB camera.</param>

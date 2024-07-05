@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -29,26 +29,32 @@ namespace NRKernal
         /// <param name="states"> The states.</param>
         public EditorControllerProvider(ControllerState[] states) : base(states)
         {
-            Inited = true;
         }
 
-        /// <summary> Executes the 'pause' action. </summary>
-        public override void OnPause()
+        /// <summary> Start the controller. </summary>
+        public override void Start()
         {
-
+            base.Start();
         }
 
-        /// <summary> Executes the 'resume' action. </summary>
-        public override void OnResume()
+        /// <summary> Pause the controller. </summary>
+        public override void Pause()
         {
+            base.Pause();
+        }
 
+        /// <summary> Resume the controller. </summary>
+        public override void Resume()
+        {
+            base.Resume();
         }
 
         /// <summary> Updates this object. </summary>
         public override void Update()
         {
-            if (!Inited)
+            if (!running)
                 return;
+
             UpdateControllerState(0);
         }
 
@@ -58,10 +64,10 @@ namespace NRKernal
             needRecenter = true;
         }
 
-        /// <summary> Executes the 'destroy' action. </summary>
-        public override void OnDestroy()
+        /// <summary> Destroy the controller. </summary>
+        public override void Destroy()
         {
-
+            base.Destroy();
         }
 
         /// <summary> Updates the controller state described by index. </summary>

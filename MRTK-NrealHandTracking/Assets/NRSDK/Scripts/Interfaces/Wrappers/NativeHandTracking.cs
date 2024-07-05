@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -96,6 +96,7 @@ namespace NRKernal
             NR_GESTURE_TYPE_VICTORY = 4,
             NR_GESTURE_TYPE_CALL = 5,
             NR_GESTURE_TYPE_SYSTEM = 6,
+            NR_GESTURE_TYPE_THUMBS_UP = 7,
         }
 
         public enum NRGestureTypeMask : UInt64
@@ -107,6 +108,7 @@ namespace NRKernal
             NR_GESTURE_TYPE_MASK_VICTORY = (1L << NRGestureType.NR_GESTURE_TYPE_VICTORY),
             NR_GESTURE_TYPE_MASK_CALL = (1L << NRGestureType.NR_GESTURE_TYPE_CALL),
             NR_GESTURE_TYPE_MASK_SYSTEM = (1L << NRGestureType.NR_GESTURE_TYPE_SYSTEM),
+            NR_GESTURE_TYPE_MASK_THUMBS_UP = (1L << NRGestureType.NR_GESTURE_TYPE_THUMBS_UP),
             NR_GESTURE_TYPE_MASK_ALL = 0x7FFFFFFFFFFFFFFF
         }
 
@@ -123,13 +125,6 @@ namespace NRKernal
             NR_HANDTRACKING_SUPPORT_MASK_HAND_JOINT_POSITION = (1L << NRHandTrackingSupportFunction.NR_HANDTRACKING_SUPPORT_HAND_JOINT_POSITION),
             NR_HANDTRACKING_SUPPORT_MASK_HAND_JOINT_ROTATION = (1L << NRHandTrackingSupportFunction.NR_HANDTRACKING_SUPPORT_HAND_JOINT_ROTATION)
         }
-
-        private UInt64 m_HandTrackingHandle = 0;
-        private UInt64 m_TrackingDataHandle = 0;
-        private UInt64 m_CurrentHMDTimeNanos = 0;
-        private UInt64 m_AvailableHandJointTypeMask = 0;
-        private UInt64 m_AvailableGestureTypeMask = 0;
-        private UInt64 m_SupportedFunctionMask = 0;
 
         private Dictionary<NRHandJointType, HandJointID> m_JointMapping = new Dictionary<NRHandJointType, HandJointID>
         {
@@ -158,201 +153,110 @@ namespace NRKernal
             {NRHandJointType.NR_HAND_JOINT_TYPE_PINKY_4, HandJointID.PinkyTip}
         };
 
-        private Transform m_CachedCameraRigTransform; //instead of using this, should use CameraRigTransform
-        private Transform CameraRigTransform
+        private NativeInterface m_NativeInterface;
+        public UInt64 PerceptionHandle
         {
             get
             {
-                if (m_CachedCameraRigTransform == null)
-                {
-                    if (NRSessionManager.Instance != null)
-                    {
-                        m_CachedCameraRigTransform = NRSessionManager.Instance.NRSessionBehaviour.transform;
-                    }
-                }
-                return m_CachedCameraRigTransform;
+                return m_NativeInterface.PerceptionHandle;
             }
         }
+        private UInt64 m_TrackingDataHandle;
 
-        public NativeHandTracking()
+        public NativeHandTracking(NativeInterface nativeInterface)
         {
-            var result = NativeApi.NRHandTrackingCreate(ref m_HandTrackingHandle);
-            NativeErrorListener.Check(result, this, "Create");
-        }
-        
-        public bool Start()
-        {
-            if (m_HandTrackingHandle == 0)
-                return false;
-            var result = NativeApi.NRHandTrackingStart(m_HandTrackingHandle);
-            NativeErrorListener.Check(result, this, "Start", true);
-
-            NativeApi.NRHandTrackingGetAvailableHandJoint(m_HandTrackingHandle, ref m_AvailableHandJointTypeMask);
-            NativeApi.NRHandTrackingGetAvailableGestureType(m_HandTrackingHandle, ref m_AvailableGestureTypeMask);
-            NativeApi.NRHandTrackingGetSupportedFunctions(m_HandTrackingHandle, ref m_SupportedFunctionMask);
-
-            return result == NativeResult.Success;
+            m_NativeInterface = nativeInterface;
         }
 
-        public void Update(HandState[] handStates)
+        public void Update(HandState rightHand, HandState leftHand)
         {
-            if (m_HandTrackingHandle == 0)
+            if (PerceptionHandle == 0)
                 return;
 
-            ulong timeStamp = NRFrame.CurrentPoseTimeStamp;
-            if (timeStamp == 0)
-            {
-                NRSessionManager.Instance.NativeAPI.NativeRenderring.GetFramePresentTime(ref timeStamp);
-            }
-            if (!TryAcquireHandTrackingDataHandle(timeStamp))
+            var result = NativeApi.NRHandTrackingDataAcquire(PerceptionHandle, NRFrame.CurrentPoseTimeStamp, ref m_TrackingDataHandle);
+            NativeErrorListener.Check(result, this, "NRHandTrackingDataAcquire");
+            if (m_TrackingDataHandle == 0)
                 return;
-
-            UInt64 hmd_time_nanos = 0;
-            var timeResult = NativeApi.NRHandTrackingDataGetHMDTimeNanos(m_TrackingDataHandle, ref hmd_time_nanos);
-            if (timeResult != NativeResult.Success)
-            {
-                NativeErrorListener.Check(timeResult, this, "hmd_time_nanos");
-            }
 
             UInt32 hand_count = 0;
-            var countResult = NativeApi.NRHandTrackingDataGetHandsCount(m_TrackingDataHandle, ref hand_count);
-            if (countResult != NativeResult.Success)
-            {
-                NativeErrorListener.Check(countResult, this, "hand_count");
-            }
+            result = NativeApi.NRHandTrackingDataGetHandsCount(m_TrackingDataHandle, ref hand_count);
+            NativeErrorListener.Check(result, this, "NRHandTrackingDataGetHandsCount");
 
-            for (int i = 0; i < handStates.Length; i++)
-            {
-                handStates[i].isTracked = false;
-                handStates[i].pointerPoseValid = false;
-                handStates[i].currentGesture = HandGesture.None;
-            }
+            rightHand.isTracked = false;
+            rightHand.currentGesture = HandGesture.None;
 
-            bool rightHandUpdated = false;
-            bool leftHandUpdated = false;
+            leftHand.isTracked = false;
+            leftHand.currentGesture = HandGesture.None;
 
             for (int i = 0; i < hand_count; i++)
             {
                 UInt64 hand_state_handle = 0;
-                var handStateCreateResult = NativeApi.NRHandStateCreate(m_TrackingDataHandle, (UInt32)i, ref hand_state_handle);
-                if (handStateCreateResult != NativeResult.Success)
+                result = NativeApi.NRHandStateCreate(m_TrackingDataHandle, (UInt32)i, ref hand_state_handle);
+                NativeErrorListener.Check(result, this, "NRHandStateCreate");
+
+                NRHandType handType = NRHandType.NR_HAND_TYPE_UNKNOWN;
+                NativeApi.NRHandStateGetHandType(hand_state_handle, ref handType);
+                NativeErrorListener.Check(result, this, "NRHandStateGetHandType");
+                HandState handState = null;
+                if (handType == NRHandType.NR_HAND_TYPE_RIGHT)
                 {
-                    NativeErrorListener.Check(handStateCreateResult, this, "hand_state_handle");
-                    continue;
+                    handState = rightHand;
+                }
+                else if (handType == NRHandType.NR_HAND_TYPE_LEFT)
+                {
+                    handState = leftHand;
                 }
 
                 bool isTracked = false;
                 NativeApi.NRHandStateIsTracked(hand_state_handle, ref isTracked);
+                NativeErrorListener.Check(result, this, "NRHandStateIsTracked");
 
-                NRHandType handType = NRHandType.NR_HAND_TYPE_UNKNOWN;
-                NativeApi.NRHandStateGetHandType(hand_state_handle, ref handType);
-
-                if (!isTracked)
-                    continue;
-
-                if (rightHandUpdated && leftHandUpdated)
-                    continue;
-
-                HandState handState = null;
-                if (handType == NRHandType.NR_HAND_TYPE_RIGHT && !rightHandUpdated)
+                NRDebugger.Debug("[NativeHandTracking] Update: isTracked={0}, handType={1} index={2}.", isTracked, handType, i);
+                if (!isTracked || handState == null)
                 {
-                    handState = handStates[0];
-                    rightHandUpdated = true;
-                }
-                else if(handType == NRHandType.NR_HAND_TYPE_LEFT && !leftHandUpdated)
-                {
-                    handState = handStates[1];
-                    leftHandUpdated = true;
-                }
-
-                if (handState == null)
+                    result = NativeApi.NRHandStateDestroy(hand_state_handle);
+                    NativeErrorListener.Check(result, this, "NRHandStateDestroy");
                     continue;
+                }
+                handState.isTracked = true;
 
                 NRGestureType gestureType = NRGestureType.NR_GESTURE_TYPE_UNKNOWN;
                 NativeApi.NRHandStateGetGestureType(hand_state_handle, ref gestureType);
+                handState.currentGesture = GetMappedGesture(gestureType);
+
+                NativeApi.NRHandStateGetImageTimestampNanos(hand_state_handle, ref handState.imageTimestamp);
+                NativeErrorListener.Check(result, this, "NRHandStateGetImageTimestampNanos");
+
+                NativeApi.NRHandStateGetConfidence(hand_state_handle, ref handState.confidence);
+                NativeErrorListener.Check(result, this, "NRHandStateGetConfidence");
 
                 UInt32 handJointCount = 0;
                 NativeApi.NRHandStateGetHandJointCount(hand_state_handle, ref handJointCount);
-                //NativeApi.NRHandStateGetConfidence(hand_state_handle, ref handState.confidence);
-
-                handState.isTracked = true;
-                handState.pointerPoseValid = true;
-                handState.currentGesture = GetMappedGesture(gestureType);
-
                 for (UInt32 j = 0; j < handJointCount; j++)
                 {
                     UInt64 hand_joint_state_handle = 0;
-                    if (NativeApi.NRHandJointStateCreate(hand_state_handle, j, ref hand_joint_state_handle) == NativeResult.Success)
+                    if (NativeApi.NRHandJointCreate(hand_state_handle, j, ref hand_joint_state_handle) == NativeResult.Success)
                     {
                         NRHandJointType handJointType = NRHandJointType.NR_HAND_JOINT_TYPE_INVALID;
-                        NativeApi.NRHandJointGetHandJointType(hand_joint_state_handle, ref handJointType);
+                        NativeApi.NRHandJointGetType(hand_joint_state_handle, ref handJointType);
 
                         NativeMat4f handJointPose = new NativeMat4f(Matrix4x4.identity);
-                        NativeApi.NRHandJointGetHandJointPose(hand_joint_state_handle, ref handJointPose);
+                        NativeApi.NRHandJointGetPose(hand_joint_state_handle, ref handJointPose);
 
                         HandJointID handJointID;
                         if (m_JointMapping.TryGetValue(handJointType, out handJointID))
                         {
                             var pose = GetWorldPose(handJointPose);
+                            NRDebugger.Debug("[NativeHandTracking] handJointID: RenderHandler={0}, handJointType={1}, position={2}.", handJointID, handJointType, pose.position);
                             SetHandJointPose(handState, handJointID, pose);
                         }
                     }
+                    NativeApi.NRHandJointDestroy(hand_joint_state_handle);
+                    NativeErrorListener.Check(result, this, "NRHandJointDestroy");
                 }
+                result = NativeApi.NRHandStateDestroy(hand_state_handle);
+                NativeErrorListener.Check(result, this, "NRHandStateDestroy");
             }
-        }
-
-        public bool Pause()
-        {
-            if (m_HandTrackingHandle == 0)
-                return false;
-            var result = NativeApi.NRHandTrackingPause(m_HandTrackingHandle);
-            NativeErrorListener.Check(result, this, "Pause");
-            return result == NativeResult.Success;
-        }
-
-        public bool Resume()
-        {
-            if (m_HandTrackingHandle == 0)
-                return false;
-            var result = NativeApi.NRHandTrackingResume(m_HandTrackingHandle);
-            NativeErrorListener.Check(result, this, "Resume");
-            return result == NativeResult.Success;
-        }
-
-        public bool Stop()
-        {
-            if (m_HandTrackingHandle == 0)
-                return false;
-            var result = NativeApi.NRHandTrackingStop(m_HandTrackingHandle);
-            NativeErrorListener.Check(result, this, "Stop");
-            return result == NativeResult.Success;
-        }
-
-        public bool Destroy()
-        {
-            if (m_HandTrackingHandle == 0)
-                return false;
-            var result = NativeApi.NRHandTrackingDestroy(m_HandTrackingHandle);
-            NativeErrorListener.Check(result, this, "Destroy");
-            return result == NativeResult.Success;
-        }
-
-        private bool TryUpdateHandTracking()
-        {
-            var result = NativeApi.NRHandTrackingUpdate(m_HandTrackingHandle);
-            return result == NativeResult.Success;
-        }
-
-        private bool TryCreateTrackingDataHandle()
-        {
-            var result = NativeApi.NRHandTrackingDataCreate(m_HandTrackingHandle, ref m_TrackingDataHandle);
-            return result == NativeResult.Success;
-        }
-
-        private bool TryAcquireHandTrackingDataHandle(UInt64 timestamp)
-        {
-            var result = NativeApi.NRAcquireHandTrackingData(m_HandTrackingHandle, timestamp, ref m_TrackingDataHandle);
-            return result == NativeResult.Success;
         }
 
         private HandEnum GetMappedHandEnum(NRHandType handType)
@@ -387,6 +291,8 @@ namespace NRKernal
                     return HandGesture.Call;
                 case NRGestureType.NR_GESTURE_TYPE_SYSTEM:
                     return HandGesture.System;
+                case NRGestureType.NR_GESTURE_TYPE_THUMBS_UP:
+                    return HandGesture.ThumbsUp;
                 default:
                     break;
             }
@@ -407,52 +313,26 @@ namespace NRKernal
 
         private Pose GetWorldPose(NativeMat4f jointPose)
         {
-            if (CameraRigTransform == null)
-            {
-                return Pose.identity;
-            }
-            Pose unitypose;
-            ConversionUtility.ApiPoseToUnityPose(jointPose, out unitypose);
+            ConversionUtility.ApiPoseToUnityPose(jointPose, out Pose unitypose);
             return ConversionUtility.ApiWorldToUnityWorld(unitypose);
         }
 
         private partial struct NativeApi
         {
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandTrackingCreate(ref UInt64 hand_tracking_handle);
+            public static extern NativeResult NRHandTrackingGetAvailableHandJoint(UInt64 perception_handle, ref UInt64 out_available_hand_joint_type_mask);
 
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandTrackingStart(UInt64 hand_tracking_handle);
+            public static extern NativeResult NRHandTrackingGetAvailableGestureType(UInt64 perception_handle, ref UInt64 out_available_gesture_type_mask);
 
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandTrackingPause(UInt64 hand_tracking_handle);
+            public static extern NativeResult NRHandTrackingGetSupportedFunctions(UInt64 perception_handle, ref UInt64 out_supported_function_mask);
 
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandTrackingResume(UInt64 hand_tracking_handle);
+            public static extern NativeResult NRHandTrackingDataCreate(UInt64 perception_handle, ref UInt64 out_hand_tracking_data_handle);
 
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandTrackingStop(UInt64 hand_tracking_handle);
-
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandTrackingDestroy(UInt64 hand_tracking_handle);
-
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandTrackingGetAvailableHandJoint(UInt64 hand_tracking_handle, ref UInt64 out_available_hand_joint_type_mask);
-
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandTrackingGetAvailableGestureType(UInt64 hand_tracking_handle, ref UInt64 out_available_gesture_type_mask);
-
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandTrackingGetSupportedFunctions(UInt64 hand_tracking_handle, ref UInt64 out_supported_function_mask);
-
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandTrackingUpdate(UInt64 hand_tracking_handle);
-
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandTrackingDataCreate(UInt64 hand_tracking_handle, ref UInt64 out_hand_tracking_data_handle);
-
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRAcquireHandTrackingData(UInt64 hand_tracking_handle, UInt64 timestamp, ref UInt64 out_hand_tracking_data_handle);
+            public static extern NativeResult NRHandTrackingDataAcquire(UInt64 perception_handle, UInt64 timestamp, ref UInt64 out_hand_tracking_data_handle);
 
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRHandTrackingDataDestroy(UInt64 hand_tracking_data_handle);
@@ -473,28 +353,31 @@ namespace NRKernal
             public static extern NativeResult NRHandStateGetHandType(UInt64 hand_state_handle, ref NRHandType out_hand_type);
 
             [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRHandStateGetImageTimestampNanos(UInt64 hand_state_handle, ref UInt64 out_img_timestamp_nanos);
+
+            [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRHandStateGetGestureType(UInt64 hand_state_handle, ref NRGestureType out_gesture_type);
 
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRHandStateIsTracked(UInt64 hand_state_handle, ref bool out_is_tracked);
 
             [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRHandStateGetConfidence(UInt64 hand_state_handle, ref float out_confidence);
+
+            [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRHandStateGetHandJointCount(UInt64 hand_state_handle, ref UInt32 out_hand_joint_count);
 
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandJointStateCreate(UInt64 hand_state_handle, UInt32 hand_joint_index, ref UInt64 out_hand_joint_state_handle);
+            public static extern NativeResult NRHandJointCreate(UInt64 hand_state_handle, UInt32 hand_joint_index, ref UInt64 out_hand_joint_state_handle);
 
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandJointStateDestroy(UInt64 hand_joint_state_handle);
+            public static extern NativeResult NRHandJointDestroy(UInt64 hand_joint_state_handle);
 
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandJointGetHandJointType(UInt64 hand_joint_state_handle, ref NRHandJointType out_hand_joint_type);
+            public static extern NativeResult NRHandJointGetType(UInt64 hand_joint_state_handle, ref NRHandJointType out_hand_joint_type);
 
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRHandJointGetHandJointPose(UInt64 hand_joint_state_handle, ref NativeMat4f out_hand_joint_pose);
-
-            //[DllImport(NativeConstants.NRNativeLibrary)]
-            //public static extern NativeResult NRHandStateGetConfidence(UInt64 hand_state_handle, ref float out_confidence);
+            public static extern NativeResult NRHandJointGetPose(UInt64 hand_joint_state_handle, ref NativeMat4f out_hand_joint_pose);
         }
     }
 }

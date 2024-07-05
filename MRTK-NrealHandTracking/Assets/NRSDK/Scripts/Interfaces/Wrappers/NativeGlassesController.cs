@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -13,27 +13,27 @@ namespace NRKernal
     using System.Runtime.InteropServices;
 
     /// <summary>
-    /// The callback method type which will be called when put on or take off nreal glasses. </summary>
+    /// The callback method type which will be called when put on or take off xreal glasses. </summary>
     /// <param name="glasses_control_handle"> glasses_control_handle The handle of GlassesControl.</param>
     /// <param name="wearing_status">         wear_or_not , 1: put on glasses . 0: take off glasses.</param>
     /// <param name="user_data">              The custom user data.</param>
-    public delegate void NRGlassesControlWearCallback(UInt64 glasses_control_handle, int wearing_status, UInt64 user_data);
+    internal delegate void NRGlassesControlWearCallback(UInt64 glasses_control_handle, int wearing_status, UInt64 user_data);
 
     /// <summary>
-    /// The callback method type which will be called when plug off nreal glasses. </summary>
+    /// The callback method type which will be called when plug off xreal glasses. </summary>
     /// <param name="glasses_control_handle"> glasses_control_handle The handle of GlassesControl.</param>
     /// <param name="user_data">              The custom user data.</param>
-    public delegate void NRGlassesControlPlugOffCallback(UInt64 glasses_control_handle, UInt64 user_data);
+    internal delegate void NRGlassesControlPlugOffCallback(UInt64 glasses_control_handle, UInt64 user_data);
 
     /// <summary>
-    /// The callback method type which will be called when plug off nreal glasses. </summary>
+    /// The callback method type which will be called when plug off xreal glasses. </summary>
     /// <param name="glasses_control_handle"> glasses_control_handle The handle of GlassesControl.</param>
     /// <param name="user_data">              user_data The custom user data.</param>
     /// <param name="reason">                 The reason of glasses disconnect.</param>
-    public delegate void NRGlassesControlNotifyQuitAppCallback(UInt64 glasses_control_handle, IntPtr user_data, GlassesDisconnectReason reason);
+    internal delegate void NRGlassesControlNotifyQuitAppCallback(UInt64 glasses_control_handle, IntPtr user_data, GlassesDisconnectReason reason);
 
     /// <summary> A controller for handling native glasses. </summary>
-    public partial class NativeGlassesController
+    internal partial class NativeGlassesController
     {
         /// <summary> Handle of the glasses controller. </summary>
         private UInt64 m_GlassesControllerHandle = 0;
@@ -51,7 +51,17 @@ namespace NRKernal
         public void Create()
         {
             NativeResult result = NativeApi.NRGlassesControlCreate(ref m_GlassesControllerHandle);
-            NativeErrorListener.Check(result, this, "Create");
+            NativeErrorListener.Check(result, this, "Create", true);
+        }
+
+        /// <summary> Gets current stereo mode of glasses. </summary>
+        /// <returns> The mode. </returns>
+        public NativeGlassesStereoMode GetStereoMode()
+        {
+            NativeGlassesStereoMode out_mode = NativeGlassesStereoMode.UnKnown;
+            NativeResult result = NativeApi.NRGlassesControlGetDisplayStereoMode(m_GlassesControllerHandle, ref out_mode);
+            NativeErrorListener.Check(result, this, "GetStereoMode");
+            return out_mode;
         }
 
         /// <summary> Back, called when the regis glasses wear. </summary>
@@ -63,17 +73,7 @@ namespace NRKernal
             NativeErrorListener.Check(result, this, "RegisGlassesWearCallBack");
         }
 
-        /// <summary> Gets temprature level. </summary>
-        /// <returns> The temprature level. </returns>
-        public GlassesTemperatureLevel GetTempratureLevel()
-        {
-            GlassesTemperatureLevel level = GlassesTemperatureLevel.TEMPERATURE_LEVEL_NORMAL;
-            NativeResult result = NativeApi.NRGlassesControlGetTemperatureLevel(m_GlassesControllerHandle, ref level);
-            NativeErrorListener.Check(result, this, "GetTempratureLevel");
-            return level;
-        }
-
-        /// <summary> Back, called when the regis glasses plug out. </summary>
+        /// <summary> Back, called when the regist glasses plug out. </summary>
         /// <param name="callback"> The callback.</param>
         /// <param name="userdata"> The userdata.</param>
         public void RegisGlassesPlugOutCallBack(NRGlassesControlPlugOffCallback callback, ulong userdata)
@@ -123,6 +123,7 @@ namespace NRKernal
         {
             NativeResult result = NativeApi.NRGlassesControlDestroy(m_GlassesControllerHandle);
             NativeErrorListener.Check(result, this, "Destroy");
+            m_GlassesControllerHandle = 0;
         }
 
         private partial struct NativeApi
@@ -163,13 +164,6 @@ namespace NRKernal
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRGlassesControlDestroy(UInt64 glasses_control_handle);
 
-            /// <summary> Nr glasses control get temperature level. </summary>
-            /// <param name="glasses_control_handle"> The handle of GlassesControl.</param>
-            /// <param name="temperature_level">      [in,out] The temperature level.</param>
-            /// <returns> A NativeResult. </returns>
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRGlassesControlGetTemperatureLevel(UInt64 glasses_control_handle, ref GlassesTemperatureLevel temperature_level);
-
             /// <summary> Set the callback method when put on or take off glasses. </summary>
             /// <param name="glasses_control_handle"> The handle of GlassesControl.</param>
             /// <param name="data_callback">          The callback method.</param>
@@ -200,6 +194,15 @@ namespace NRKernal
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRGlassesControlSetGlassesDisconnectedCallback(
                     UInt64 glasses_control_handle, NRGlassesControlPlugOffCallback data_callback, UInt64 user_data);
+
+            /// <summary> Nr glasses control get current mode. </summary>
+            /// <param name="glasses_control_handle"> The handle of GlassesControl.</param>
+            /// <param name="out_mode">      [in,out] The current mode of glasses.</param>
+            /// <returns> A NativeResult. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRGlassesControlGetDisplayStereoMode(
+                UInt64 glasses_control_handle, ref NativeGlassesStereoMode out_mode);
+
         }
     }
 }

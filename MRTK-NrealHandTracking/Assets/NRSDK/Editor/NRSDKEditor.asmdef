@@ -1,12 +1,29 @@
 {
     "name": "NRSDKEditor",
+    "rootNamespace": "",
     "references": [
         "NRSDK"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [
         "Editor"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": false
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.xr.management",
+            "expression": "",
+            "define": "USING_XR_MANAGEMENT"
+        },
+        {
+            "name": "com.nreal.xr",
+            "expression": "",
+            "define": "USING_XR_SDK_XREAL"
+        }
+    ],
+    "noEngineReferences": false
 }

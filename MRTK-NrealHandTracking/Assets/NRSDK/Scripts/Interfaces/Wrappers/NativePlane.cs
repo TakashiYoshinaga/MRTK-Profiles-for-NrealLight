@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -15,7 +15,7 @@ namespace NRKernal
     using UnityEngine;
 
     /// <summary> 6-dof Plane Tracking's Native API . </summary>
-    public partial class NativePlane
+    internal partial class NativePlane
     {
         /// <summary> The native interface. </summary>
         private NativeInterface m_NativeInterface;
@@ -48,7 +48,7 @@ namespace NRKernal
         public TrackablePlaneType GetPlaneType(UInt64 trackable_handle)
         {
             TrackablePlaneType plane_type = TrackablePlaneType.INVALID;
-            NativeApi.NRTrackablePlaneGetType(m_NativeInterface.TrackingHandle, trackable_handle, ref plane_type);
+            NativeApi.NRTrackablePlaneGetType(m_NativeInterface.PerceptionHandle, trackable_handle, ref plane_type);
             return plane_type;
         }
 
@@ -59,7 +59,7 @@ namespace NRKernal
         {
             Pose pose = Pose.identity;
             NativeMat4f center_native_pos = NativeMat4f.identity;
-            NativeApi.NRTrackablePlaneGetCenterPose(m_NativeInterface.TrackingHandle, trackable_handle, ref center_native_pos);
+            NativeApi.NRTrackablePlaneGetCenterPose(m_NativeInterface.PerceptionHandle, trackable_handle, ref center_native_pos);
             ConversionUtility.ApiPoseToUnityPose(center_native_pos, out pose);
             return pose;
         }
@@ -70,7 +70,7 @@ namespace NRKernal
         public float GetExtentX(UInt64 trackable_handle)
         {
             float extent_x = 0;
-            NativeApi.NRTrackablePlaneGetExtentX(m_NativeInterface.TrackingHandle, trackable_handle, ref extent_x);
+            NativeApi.NRTrackablePlaneGetExtentX(m_NativeInterface.PerceptionHandle, trackable_handle, ref extent_x);
             return extent_x;
         }
 
@@ -80,7 +80,7 @@ namespace NRKernal
         public float GetExtentZ(UInt64 trackable_handle)
         {
             float extent_z = 0;
-            NativeApi.NRTrackablePlaneGetExtentZ(m_NativeInterface.TrackingHandle, trackable_handle, ref extent_z);
+            NativeApi.NRTrackablePlaneGetExtentZ(m_NativeInterface.PerceptionHandle, trackable_handle, ref extent_z);
             return extent_z;
         }
 
@@ -88,9 +88,9 @@ namespace NRKernal
         {
             polygonList.Clear();
             int polygon_size = 0;
-            NativeApi.NRTrackablePlaneGetPolygonSize(m_NativeInterface.TrackingHandle, trackable_handle, ref polygon_size);
+            NativeApi.NRTrackablePlaneGetPolygonSize(m_NativeInterface.PerceptionHandle, trackable_handle, ref polygon_size);
             int size = polygon_size / 2;
-            NativeApi.NRTrackablePlaneGetPolygon(m_NativeInterface.TrackingHandle, trackable_handle, (m_TmpPointsHandle.AddrOfPinnedObject()));
+            NativeApi.NRTrackablePlaneGetPolygon(m_NativeInterface.PerceptionHandle, trackable_handle, (m_TmpPointsHandle.AddrOfPinnedObject()));
             float[] point_data = new float[size * 2];
             Array.Copy(m_Points, point_data, size * 2);
             Pose centerPos = GetCenterPose(trackable_handle);

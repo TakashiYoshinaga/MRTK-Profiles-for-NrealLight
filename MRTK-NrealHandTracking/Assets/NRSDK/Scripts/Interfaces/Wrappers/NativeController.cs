@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -13,132 +13,166 @@ namespace NRKernal
     using System.Runtime.InteropServices;
     using UnityEngine;
 
+
+    public enum NRControllerType
+    {
+        NR_CONTROLLER_TYPE_BASIC = 0,
+    };
+
     /// <summary> A controller for handling natives. </summary>
     internal partial class NativeController
     {
+        /// <summary> Handle of the controller group. </summary>
+        private UInt64 m_ControllerGroupHandle = 0;
         /// <summary> Handle of the controller. </summary>
-        private UInt64 m_ControllerHandle = 0;
+        private UInt64[] m_ControllerHandle;
         /// <summary> The state handles. </summary>
-        private UInt64[] m_StateHandles = new UInt64[NRInput.MAX_CONTROLLER_STATE_COUNT] { 0, 0 };
+        private UInt64[] m_StateHandles;
 
-        /// <summary> Initializes this object. </summary>
+        /// <summary> Create this object. </summary>
         /// <returns> True if it succeeds, false if it fails. </returns>
-        public bool Init()
+        public void Create()
         {
-            NRDebugger.Debug("[NativeController] Init");
-            NativeResult result = NativeApi.NRControllerCreate(ref m_ControllerHandle);
-            if (result == NativeResult.Success)
+            NRDebugger.Info("[NativeController] Create");
+            NativeResult result = NativeApi.NRControllerGroupCreate(ref m_ControllerGroupHandle);
+            NativeErrorListener.Check(result, this, "GroupCreate", true);
+            NRDebugger.Info("[NativeController] NRControllerGroupCreate: {0}", m_ControllerGroupHandle);
+            int groupCount = 0;
+            result = NativeApi.NRControllerGroupGetCount(m_ControllerGroupHandle, ref groupCount);
+            NativeErrorListener.Check(result, this, "GroupGetCount");
+            NRDebugger.Info("[NativeController] NRControllerGroupGetCount: {0}", groupCount);
+            m_ControllerHandle = new UInt64[groupCount];
+            m_StateHandles = new UInt64[groupCount];
+            for (int i = 0; i < groupCount; i++)
             {
-                //manually start controller
-                NativeApi.NRControllerStart(m_ControllerHandle);
-
-                int count = GetControllerCount();
-                NRDebugger.Debug("[NativeController] Get controller count:" + count);
-                for (int i = 0; i < count; i++)
-                {
-                    result = NativeApi.NRControllerStateCreate(m_ControllerHandle, i, ref m_StateHandles[i]);
-                    if (result != NativeResult.Success)
-                    {
-                        NRDebugger.Error("[NativeController] Create Failed!" + result.ToString());
-                        return false;
-                    }
-                }
-                NRDebugger.Debug("[NativeController] Created Successed");
-                return true;
+                bool value = NativeApi.NRControllerGroupCheckControllerType(m_ControllerGroupHandle,
+                    i, NRControllerType.NR_CONTROLLER_TYPE_BASIC);
+                NRDebugger.Info("[NativeController] CheckControllerType: {0}", value);
+                int controller_id = 0;
+                result = NativeApi.NRControllerGroupGetControllerId(m_ControllerGroupHandle, i, ref controller_id);
+                NativeErrorListener.Check(result, this, "GetControllerId");
+                IntPtr out_description = IntPtr.Zero;
+                uint out_description_length = 0;
+                result = NativeApi.NRControllerGroupGetDescription(m_ControllerGroupHandle, i, ref out_description, ref out_description_length);
+                NativeErrorListener.Check(result, this, "GetDescription");
+                byte[] bytes = new byte[out_description_length];
+                Marshal.Copy(out_description, bytes, 0, (int)out_description_length);
+                NRDebugger.Info("[NativeController] GetDescription: {0}", System.Text.Encoding.ASCII.GetString(bytes, 0, (int)out_description_length));
+                ControllerAvailableFeature feature = 0;
+                result = NativeApi.NRControllerGroupGetSupportedFeatures(m_ControllerGroupHandle, i, ref feature);
+                NativeErrorListener.Check(result, this, "GetSupportedFeatures");
+                NRDebugger.Info("[NativeController] GetSupportedFeatures: {0}", feature);
+                result = NativeApi.NRControllerCreate(controller_id, ref m_ControllerHandle[i]);
+                NativeErrorListener.Check(result, this, "NRControllerCreate");
+                NRDebugger.Info("[NativeController] Create : {0}", m_ControllerHandle[i]);
             }
-            NRDebugger.Error("[NativeController] Create Failed!");
-            m_ControllerHandle = 0;
-            return false;
         }
 
-        //public void TestApi(int index)
-        //{
-        //string msg = "GetControllerCount:" + GetControllerCount() + "\n"
-        //+"GetAvailableFeatures:" + GetAvailableFeatures(index) + "\n"
-        //+ "GetControllerType:" + GetControllerType(index) + "\n"
-        //+ "GetConnectionState:" + GetConnectionState(index) + "\n"
-        //+ "GetBatteryLevel:" + GetBatteryLevel(index) + "\n"
-        //+ "IsCharging:" + IsCharging(index) + "\n"
-        //+ "GetPose:" + GetPose(index).ToString("F3") + "\n"
-        //+ "GetGyro:" + GetGyro(index).ToString("F3") + "\n"
-        //+ "GetAccel:" + GetAccel(index).ToString("F3") + "\n"
-        //+ "GetMag:" + GetMag(index).ToString("F3") + "\n"
-        //+ "GetButtonState:" + GetButtonState(index) + "\n"
-        //+ "GetButtonUp:" + GetButtonUp(index) + "\n"
-        //+ "GetButtonDown:" + GetButtonDown(index) + "\n"
-        //+ "IsTouching:" + IsTouching(index) + "\n"
-        //+ "GetTouchUp:" + GetTouchUp(index) + "\n"
-        //+ "GetTouchDown:" + GetTouchDown(index) + "\n"
-        //+ "GetTouch:" + GetTouch(index).ToString("F3") + "\n";
-        //NRDebugger.Info(msg);
-        //}
+        /// <summary> Start this object. </summary>
+        /// <returns> True if it succeeds, false if it fails. </returns>
+        public bool Start()
+        {
+            if (m_ControllerHandle == null)
+            {
+                return false;
+            }
+
+            NRDebugger.Info("[NativeController] Start");
+            for (int i = 0; i < m_ControllerHandle.Length; i++)
+            {
+                NativeResult result = NativeApi.NRControllerStart(m_ControllerHandle[i]);
+                NativeErrorListener.Check(result, this, "Start", true);
+            }
+
+            return true;
+        }
 
         /// <summary> Gets controller count. </summary>
         /// <returns> The controller count. </returns>
         public int GetControllerCount()
         {
-            if (m_ControllerHandle == 0)
-            {
-                return 0;
-            }
-            int count = 0;
-            if (NativeApi.NRControllerGetCount(m_ControllerHandle, ref count) != NativeResult.Success)
-                NRDebugger.Error("Get Controller Count Failed!");
-            return Mathf.Min(count, m_StateHandles.Length);
+            return m_ControllerHandle == null ? 0 : m_ControllerHandle.Length;
         }
 
         /// <summary> Pauses this object. </summary>
         public void Pause()
         {
-            if (m_ControllerHandle == 0)
+            if (m_ControllerHandle == null)
             {
                 return;
             }
-            NativeApi.NRControllerPause(m_ControllerHandle);
+            for (int i = 0; i < m_ControllerHandle.Length; i++)
+            {
+                NativeResult result = NativeApi.NRControllerPause(m_ControllerHandle[i]);
+                NativeErrorListener.Check(result, this, "Pause", true);
+            }
         }
 
         /// <summary> Resumes this object. </summary>
         public void Resume()
         {
-            if (m_ControllerHandle == 0)
+            if (m_ControllerHandle == null)
             {
                 return;
             }
-            NativeApi.NRControllerResume(m_ControllerHandle);
+            for (int i = 0; i < m_ControllerHandle.Length; i++)
+            {
+                NativeResult result = NativeApi.NRControllerResume(m_ControllerHandle[i]);
+                NativeErrorListener.Check(result, this, "Resume", true);
+            }
         }
 
         /// <summary> Stops this object. </summary>
         public void Stop()
         {
-            if (m_ControllerHandle == 0)
+            if (m_ControllerHandle == null)
             {
                 return;
             }
-            NativeApi.NRControllerStop(m_ControllerHandle);
+            for (int i = 0; i < m_ControllerHandle.Length; i++)
+            {
+                NativeResult result = NativeApi.NRControllerStop(m_ControllerHandle[i]);
+                NativeErrorListener.Check(result, this, "Stop", true);
+            }
         }
 
         /// <summary> Destroys this object. </summary>
         public void Destroy()
         {
-            if (m_ControllerHandle == 0)
+            if (m_ControllerHandle == null)
             {
                 return;
             }
-            Stop();
-            NativeApi.NRControllerDestroy(m_ControllerHandle);
+            NativeResult result = NativeApi.NRControllerGroupDestroy(m_ControllerGroupHandle);
+            NativeErrorListener.Check(result, this, "GroupDestroy", true);
+            m_ControllerGroupHandle = 0;
+            for (int i = 0; i < m_ControllerHandle.Length; i++)
+            {
+                if (m_StateHandles[i] != 0)
+                {
+                    result = NativeApi.NRControllerStateDestroy(m_StateHandles[i]);
+                    NativeErrorListener.Check(result, this, "StateDestroy", true);
+                }
+                if (m_ControllerHandle[i] != 0)
+                {
+                    result = NativeApi.NRControllerDestroy(m_ControllerHandle[i]);
+                    NativeErrorListener.Check(result, this, "Destroy", true);
+                }
+            }
+            m_ControllerHandle = null;
         }
 
         /// <summary> Gets available features. </summary>
         /// <param name="controllerIndex"> Zero-based index of the controller.</param>
         /// <returns> The available features. </returns>
-        public uint GetAvailableFeatures(int controllerIndex)
+        public ControllerAvailableFeature GetAvailableFeatures(int controllerIndex)
         {
-            if (m_ControllerHandle == 0)
+            if (m_ControllerHandle == null)
             {
                 return 0;
             }
-            uint availableFeature = 0;
-            NativeApi.NRControllerGetAvailableFeatures(m_ControllerHandle, controllerIndex, ref availableFeature);
+            ControllerAvailableFeature availableFeature = 0;
+            NativeApi.NRControllerGroupGetSupportedFeatures(m_ControllerGroupHandle, controllerIndex, ref availableFeature);
             return availableFeature;
         }
 
@@ -147,12 +181,12 @@ namespace NRKernal
         /// <returns> The controller type. </returns>
         public ControllerType GetControllerType(int controllerIndex)
         {
-            if (m_ControllerHandle == 0)
+            if (m_ControllerHandle == null)
             {
                 return ControllerType.CONTROLLER_TYPE_UNKNOWN;
             }
             ControllerType controllerType = ControllerType.CONTROLLER_TYPE_UNKNOWN;
-            NativeApi.NRControllerGetType(m_ControllerHandle, controllerIndex, ref controllerType);
+            NativeApi.NRControllerGetConnectedType(m_ControllerHandle[controllerIndex], ref controllerType);
             return controllerType;
         }
 
@@ -160,11 +194,13 @@ namespace NRKernal
         /// <param name="controllerIndex"> Zero-based index of the controller.</param>
         public void RecenterController(int controllerIndex)
         {
-            if (m_ControllerHandle == 0)
+            if (m_ControllerHandle == null)
             {
                 return;
             }
-            NativeApi.NRControllerRecenter(m_ControllerHandle, controllerIndex);
+            if (m_ControllerHandle.Length <= controllerIndex)
+                return;
+            NativeApi.NRControllerRecenter(m_ControllerHandle[controllerIndex]);
         }
 
         /// <summary> Trigger haptic vibrate. </summary>
@@ -174,35 +210,30 @@ namespace NRKernal
         /// <param name="amplitude">       The amplitude.</param>
         public void TriggerHapticVibrate(int controllerIndex, Int64 duration, float frequency, float amplitude)
         {
-            if (m_ControllerHandle == 0)
+            if (m_ControllerHandle == null)
             {
                 return;
             }
-            NativeApi.NRControllerHapticVibrate(m_ControllerHandle, controllerIndex, duration, frequency, amplitude);
+            if (m_ControllerHandle.Length <= controllerIndex)
+                return;
+            NativeApi.NRControllerHapticVibrate(m_ControllerHandle[controllerIndex], duration, frequency, amplitude);
         }
 
-        /// <summary> Updates the state described by controllerIndex. </summary>
-        /// <param name="controllerIndex"> Zero-based index of the controller.</param>
-        /// <returns> True if it succeeds, false if it fails. </returns>
-        public bool UpdateState(int controllerIndex)
+        public void UpdateState(int controllerIndex)
         {
-            if (m_ControllerHandle == 0)
+            if (m_ControllerHandle == null)
             {
-                return false;
+                return;
             }
-            if (m_StateHandles[controllerIndex] == 0)
-                NativeApi.NRControllerStateCreate(m_ControllerHandle, controllerIndex, ref m_StateHandles[controllerIndex]);
-            if (m_StateHandles[controllerIndex] == 0)
-                return false;
-            NativeResult result = NativeApi.NRControllerStateUpdate(m_StateHandles[controllerIndex]);
-            return result == NativeResult.Success;
-        }
-
-        /// <summary> Destroys the state described by controllerIndex. </summary>
-        /// <param name="controllerIndex"> Zero-based index of the controller.</param>
-        public void DestroyState(int controllerIndex)
-        {
-            NativeApi.NRControllerStateDestroy(m_StateHandles[controllerIndex]);
+            NativeResult result = NativeResult.Success;
+            if (m_StateHandles[controllerIndex] != 0)
+            {
+                result = NativeApi.NRControllerStateDestroy(m_StateHandles[controllerIndex]);
+                NativeErrorListener.Check(result, this, "StateDestroy", true);
+                m_StateHandles[controllerIndex] = 0;
+            }
+            result = NativeApi.NRControllerStateUpdate(m_ControllerHandle[controllerIndex], ref m_StateHandles[controllerIndex]);
+            NativeErrorListener.Check(result, this, "ControllerStateUpdate", true);
         }
 
         /// <summary> Gets connection state. </summary>
@@ -238,11 +269,11 @@ namespace NRKernal
         /// <summary> Gets a pose. </summary>
         /// <param name="controllerIndex"> Zero-based index of the controller.</param>
         /// <returns> The pose. </returns>
-        public Pose GetPose(int controllerIndex)
+        public Pose GetPose(int controllerIndex, ulong hmdTime)
         {
             Pose controllerPos = Pose.identity;
             NativeMat4f mat4f = new NativeMat4f(Matrix4x4.identity);
-            NativeResult result = NativeApi.NRControllerStateGetPose(m_StateHandles[controllerIndex], ref mat4f);
+            NativeResult result = NativeApi.NRControllerGetPose(m_ControllerHandle[controllerIndex], hmdTime, ref mat4f);
             if (result == NativeResult.Success)
                 ConversionUtility.ApiPoseToUnityPose(mat4f, out controllerPos);
             return controllerPos;
@@ -254,7 +285,7 @@ namespace NRKernal
         public Vector3 GetGyro(int controllerIndex)
         {
             NativeVector3f vec3f = new NativeVector3f();
-            NativeResult result = NativeApi.NRControllerStateGetGyro(m_StateHandles[controllerIndex], ref vec3f);
+            NativeResult result = NativeApi.NRControllerStateGetGyroscope(m_StateHandles[controllerIndex], ref vec3f);
             if (result == NativeResult.Success)
                 return vec3f.ToUnityVector3();
             return Vector3.zero;
@@ -266,7 +297,7 @@ namespace NRKernal
         public Vector3 GetAccel(int controllerIndex)
         {
             NativeVector3f vec3f = new NativeVector3f();
-            NativeResult result = NativeApi.NRControllerStateGetAccel(m_StateHandles[controllerIndex], ref vec3f);
+            NativeResult result = NativeApi.NRControllerStateGetAccelerometer(m_StateHandles[controllerIndex], ref vec3f);
             if (result == NativeResult.Success)
                 return vec3f.ToUnityVector3();
             return Vector3.zero;
@@ -278,7 +309,7 @@ namespace NRKernal
         public Vector3 GetMag(int controllerIndex)
         {
             NativeVector3f vec3f = new NativeVector3f();
-            NativeResult result = NativeApi.NRControllerStateGetMag(m_StateHandles[controllerIndex], ref vec3f);
+            NativeResult result = NativeApi.NRControllerStateGetMagnetometer(m_StateHandles[controllerIndex], ref vec3f);
             if (result == NativeResult.Success)
                 return vec3f.ToUnityVector3();
             return Vector3.zero;
@@ -356,27 +387,18 @@ namespace NRKernal
             return Vector3.zero;
         }
 
-        /// <summary> Updates the head pose described by hmdPose. </summary>
-        /// <param name="hmdPose"> The hmd pose.</param>
-        public void UpdateHeadPose(Pose hmdPose)
-        {
-            NativeMat4f apiPose;
-            ConversionUtility.UnityPoseToApiPose(hmdPose, out apiPose);
-            NativeApi.NRControllerSetHeadPose(m_ControllerHandle, ref apiPose);
-        }
-
         /// <summary> Gets a version. </summary>
         /// <param name="controllerIndex"> Zero-based index of the controller.</param>
         /// <returns> The version. </returns>
         public string GetVersion(int controllerIndex)
         {
-            if (m_ControllerHandle == 0)
+            if (m_ControllerHandle == null)
             {
                 return "";
             }
 
             byte[] bytes = new byte[128];
-            var result = NativeApi.NRControllerGetVersion(m_ControllerHandle, controllerIndex, bytes, bytes.Length);
+            var result = NativeApi.NRControllerGetVersion(m_ControllerHandle[controllerIndex], bytes, bytes.Length);
             if (result == NativeResult.Success)
             {
                 return System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
@@ -387,234 +409,261 @@ namespace NRKernal
             }
         }
 
-        public HandednessType GetHandednessType()
+        public HandednessType GetHandednessType(int controllerIndex)
         {
             HandednessType handedness_type = HandednessType.RIGHT_HANDEDNESS;
-            var result = NativeApi.NRControllerGetHandednessType(m_ControllerHandle, ref handedness_type);
+            var result = NativeApi.NRControllerGetHandheldType(m_ControllerHandle[controllerIndex], ref handedness_type);
             NativeErrorListener.Check(result, this, "GetHandednessType");
             return handedness_type;
         }
 
         private partial struct NativeApi
         {
-            /// <summary> Nr controller create. </summary>
-            /// <param name="out_controller_handle"> [in,out] Handle of the out controller.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Create the controller group object. </summary>
+            /// <param name="out_controller_group_handle"> [in,out] The handle of controller group object. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerCreate(ref UInt64 out_controller_handle);
+            public static extern NativeResult NRControllerGroupCreate(ref UInt64 out_controller_group_handle);
 
-            /// <summary> Nr controller start. </summary>
-            /// <param name="controller_handle"> Handle of the controller.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the count of controller group. </summary>
+            /// <param name="controller_group_handle"> The handle of controller group object. </param>
+            /// <param name="out_group_count"> [in,out] The count of controller group. </param>
+            /// <returns> The result of operation. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRControllerGroupGetCount(UInt64 controller_group_handle,
+                ref int out_group_count);
+
+            /// <summary> Check whether the controller system which the group_index
+            /// and the controller_type reference to are the same. </summary>
+            /// <param name="controller_group_handle"> The handle of controller group object. </param>
+            /// <param name="group_index"> The index of controller group. </param>
+            /// <param name="controller_type"> The type of controller system. </param>
+            /// <returns> True if the controller systems are the same, false otherwise. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern bool NRControllerGroupCheckControllerType(UInt64 controller_group_handle,
+                int group_index, NRControllerType controller_type);
+
+            /// <summary> Get the controller id of controller group. </summary>
+            /// <param name="controller_group_handle"> The handle of controller group object. </param>
+            /// <param name="group_index"> The index of controller group. </param>
+            /// <param name="out_controller_id"> [in,out] The identifier of controller system. </param>
+            /// <returns> The result of operation. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRControllerGroupGetControllerId(UInt64 controller_group_handle,
+                int group_index, ref int out_controller_id);
+
+            /// <summary> Get the description of controller group. </summary>
+            /// <param name="controller_group_handle"> The handle of controller group object. </param>
+            /// <param name="group_index"> The index of controller group. </param>
+            /// <param name="out_description"> [in,out] The description of controller system. </param>
+            /// <param name="out_description_length"> [in,out] The length of description. </param>
+            /// <returns> The result of operation. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRControllerGroupGetDescription(UInt64 controller_group_handle,
+                int group_index, ref IntPtr out_description, ref uint out_description_length);
+
+            /// <summary> Get the supported features of controller group. </summary>
+            /// <param name="controller_group_handle"> The handle of controller group object. </param>
+            /// <param name="group_index"> The index of controller group. </param>
+            /// <param name="out_supported_features"> [in,out] The supported features of controller group. </param>
+            /// <returns> The result of operation. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRControllerGroupGetSupportedFeatures(UInt64 controller_group_handle,
+                int group_index, ref ControllerAvailableFeature out_supported_features);
+
+            /// <summary> Release memory used by the controller group object. </summary>
+            /// <param name="controller_group_handle"> The handle of controller group object. </param>
+            /// <returns> The result of operation. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRControllerGroupDestroy(UInt64 controller_group_handle);
+
+            /// <summary> Create the controller system object. </summary>
+            /// <param name="controller_id"> The identifier of controller system. </param>
+            /// <param name="out_controller_handle"> [in,out] The handle of controller system object. </param>
+            /// <returns> The result of operation. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRControllerCreate(int controller_id, ref UInt64 out_controller_handle);
+
+            /// <summary> Start the controller system object. </summary>
+            /// <param name="controller_handle"> The handle of controller system object. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerStart(UInt64 controller_handle);
 
-            /// <summary> Nr controller pause. </summary>
-            /// <param name="controller_handle"> Handle of the controller.</param>
-            /// <returns> A NativeResult. </returns>
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerPause(UInt64 controller_handle);
-
-            /// <summary> Nr controller resume. </summary>
-            /// <param name="controller_handle"> Handle of the controller.</param>
-            /// <returns> A NativeResult. </returns>
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerResume(UInt64 controller_handle);
-
-            /// <summary> Nr controller stop. </summary>
-            /// <param name="controller_handle"> Handle of the controller.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Stop the controller system object. </summary>
+            /// <param name="controller_handle"> The handle of controller system object. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerStop(UInt64 controller_handle);
 
-            /// <summary> Nr controller destroy. </summary>
-            /// <param name="controller_handle"> Handle of the controller.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Release memory used by the controller system object. </summary>
+            /// <param name="controller_handle"> The handle of controller system object. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerDestroy(UInt64 controller_handle);
 
-            /// <summary> Nr controller get count. </summary>
-            /// <param name="controller_handle">    Handle of the controller.</param>
-            /// <param name="out_controller_count"> [in,out] Number of out controllers.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Pause the controller system object. </summary>
+            /// <param name="controller_handle"> The handle of controller system object. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerGetCount(UInt64 controller_handle, ref int out_controller_count);
+            public static extern NativeResult NRControllerPause(UInt64 controller_handle);
 
-            /// <summary> Nr controller get available features. </summary>
-            /// <param name="controller_handle">                 Handle of the controller.</param>
-            /// <param name="controller_index">                  Zero-based index of the controller.</param>
-            /// <param name="out_controller_available_features"> [in,out] The out controller available
-            ///                                                  features.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Resume the controller system object. </summary>
+            /// <param name="controller_handle"> The handle of controller system object. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerGetAvailableFeatures(UInt64 controller_handle, int controller_index, ref uint out_controller_available_features);
+            public static extern NativeResult NRControllerResume(UInt64 controller_handle);
 
-            /// <summary> Nr controller get type. </summary>
-            /// <param name="controller_handle">   Handle of the controller.</param>
-            /// <param name="controller_index">    Zero-based index of the controller.</param>
-            /// <param name="out_controller_type"> [in,out] Type of the out controller.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Notify the controller to recenter. </summary>
+            /// <param name="controller_handle"> The handle of controller system object. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerGetType(UInt64 controller_handle, int controller_index, ref ControllerType out_controller_type);
+            public static extern NativeResult NRControllerRecenter(UInt64 controller_handle);
 
-            /// <summary> Nr controller recenter. </summary>
-            /// <param name="controller_handle"> Handle of the controller.</param>
-            /// <param name="controller_index">  Zero-based index of the controller.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Notify the controller to vibrate. </summary>
+            /// <param name="controller_handle"> The handle of controller system object. </param>
+            /// <param name="duration"> The nanoseconds of the vibration will last. </param>
+            /// <param name="frequency"> The frequency of vibration in Hz. </param>
+            /// <param name="amplitude"> The amplitude of the vibration between 0.0 and 1.0. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerRecenter(UInt64 controller_handle, int controller_index);
+            public static extern NativeResult NRControllerHapticVibrate(UInt64 controller_handle,
+                long duration, float frequency, float amplitude);
 
-            /// <summary> Nr controller state create. </summary>
-            /// <param name="controller_handle">           Handle of the controller.</param>
-            /// <param name="controller_index">            Zero-based index of the controller.</param>
-            /// <param name="out_controller_state_handle"> [in,out] Handle of the out controller state.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the version of the controller. </summary>
+            /// <param name="controller_handle"> The handle of controller system object. </param>
+            /// <param name="out_version"> The buffer to store the version of the controller. </param>
+            /// <param name="out_version_length"> The length of the out_version buffer. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerStateCreate(UInt64 controller_handle, int controller_index, ref UInt64 out_controller_state_handle);
+            public static extern NativeResult NRControllerGetVersion(UInt64 controller_handle,
+                byte[] out_version, int out_version_length);
 
-            /// <summary> Nr controller state update. </summary>
-            /// <param name="controller_state_handle"> Handle of the controller state.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the handedness left or right. </summary>
+            /// <param name="controller_handle"> The handle of controller system object. </param>
+            /// <param name="handedness_type"> The handedness type returned. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerStateUpdate(UInt64 controller_state_handle);
+            public static extern NativeResult NRControllerGetHandheldType(UInt64 controller_handle, ref HandednessType handedness_type);
 
-            /// <summary> Nr controller state destroy. </summary>
-            /// <param name="controller_state_handle"> Handle of the controller state.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the connected type of the controller. </summary>
+            /// <param name="controller_handle"> The handle of controller system object. </param>
+            /// <param name="out_controller_type"> The type of the controller. </param>
+            /// <returns> The result of operation. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRControllerGetConnectedType(UInt64 controller_handle, ref ControllerType out_controller_type);
+
+            /// <summary> Update the controller state. </summary>
+            /// <param name="controller_handle"> The handle of controller system object. </param>
+            /// <param name="out_controller_state_handle"> The handle of controller state. </param>
+            /// <returns> The result of operation. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRControllerStateUpdate(UInt64 controller_handle, ref UInt64 out_controller_state_handle);
+
+            /// <summary> Release memory used by the controller state object. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerStateDestroy(UInt64 controller_state_handle);
 
-            /// <summary> duration(nanoseconds), frequency(Hz), amplitude(0.0f ~ 1.0f) </summary>
-            /// <param name="controller_handle"> Handle of the controller.</param>
-            /// <param name="controller_index">  Zero-based index of the controller.</param>
-            /// <param name="duration">          The duration.</param>
-            /// <param name="frequency">         The frequency.</param>
-            /// <param name="amplitude">         The amplitude.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the current pose of the controller. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="hmd_time_nanos"> The time to get the controller pose. </param>
+            /// <param name="out_controller_pose"> The pose of the controller. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerHapticVibrate(UInt64 controller_handle, int controller_index, Int64 duration, float frequency, float amplitude);
+            public static extern NativeResult NRControllerGetPose(UInt64 controller_state_handle, ulong hmd_time_nanos, ref NativeMat4f out_controller_pose);
 
-            /// <summary> Nr controller state get connection state. </summary>
-            /// <param name="controller_state_handle">         Handle of the controller state.</param>
-            /// <param name="out_controller_connection_state"> [in,out] State of the out controller
-            ///                                                connection.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the current gyroscope data of the controller. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="out_controller_gyro"> The gyroscope data of the controller. </param>
+            /// <returns> The result of operation. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRControllerStateGetGyroscope(UInt64 controller_state_handle, ref NativeVector3f out_controller_gyro);
+
+            /// <summary> Get the current accelerometer data of the controller. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="out_controller_accel"> The accelerometer data of the controller. </param>
+            /// <returns> The result of operation. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRControllerStateGetAccelerometer(UInt64 controller_state_handle, ref NativeVector3f out_controller_accel);
+
+            /// <summary> Get the current magnetometer data of the controller. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="out_controller_mag"> The magnetometer data of the controller. </param>
+            /// <returns> The result of operation. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRControllerStateGetMagnetometer(UInt64 controller_state_handle, ref NativeVector3f out_controller_mag);
+
+            /// <summary> Get the connection state of the controller. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="out_controller_connection_state"> The connection state of controller. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerStateGetConnectionState(UInt64 controller_state_handle, ref ControllerConnectionState out_controller_connection_state);
 
-            /// <summary> Nr controller state get battery level. </summary>
-            /// <param name="controller_state_handle">      Handle of the controller state.</param>
-            /// <param name="out_controller_battery_level"> [in,out] The out controller battery level.</param>
-            /// <returns> A NativeResult. </returns>
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerStateGetBatteryLevel(UInt64 controller_state_handle, ref int out_controller_battery_level);
-
-            /// <summary> Nr controller state get charging. </summary>
-            /// <param name="controller_state_handle"> Handle of the controller state.</param>
-            /// <param name="out_controller_charging"> [in,out] The out controller charging.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the charging state of the controller. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="out_controller_charging"> The charging state of the controller. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerStateGetCharging(UInt64 controller_state_handle, ref int out_controller_charging);
 
-            /// <summary> Nr controller state get pose. </summary>
-            /// <param name="controller_state_handle"> Handle of the controller state.</param>
-            /// <param name="out_controller_pose">     [in,out] The out controller pose.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the battery level of the controller. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="out_controller_battery_level"> The battery level of the controler.</param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerStateGetPose(UInt64 controller_state_handle, ref NativeMat4f out_controller_pose);
+            public static extern NativeResult NRControllerStateGetBatteryLevel(UInt64 controller_state_handle, ref int out_controller_battery_level);
 
-            /// <summary> Nr controller state get gyro. </summary>
-            /// <param name="controller_state_handle"> Handle of the controller state.</param>
-            /// <param name="out_controller_gyro">     [in,out] The out controller gyro.</param>
-            /// <returns> A NativeResult. </returns>
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerStateGetGyro(UInt64 controller_state_handle, ref NativeVector3f out_controller_gyro);
-
-            /// <summary> Nr controller state get accel. </summary>
-            /// <param name="controller_state_handle"> Handle of the controller state.</param>
-            /// <param name="out_controller_accel">    [in,out] The out controller accel.</param>
-            /// <returns> A NativeResult. </returns>
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerStateGetAccel(UInt64 controller_state_handle, ref NativeVector3f out_controller_accel);
-
-            /// <summary> Nr controller state get magnitude. </summary>
-            /// <param name="controller_state_handle"> Handle of the controller state.</param>
-            /// <param name="out_controller_mag">      [in,out] The out controller magnitude.</param>
-            /// <returns> A NativeResult. </returns>
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerStateGetMag(UInt64 controller_state_handle, ref NativeVector3f out_controller_mag);
-
-            /// <summary> Nr controller state get button state. </summary>
-            /// <param name="controller_state_handle">     Handle of the controller state.</param>
-            /// <param name="out_controller_button_state"> [in,out] State of the out controller button.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the information of all buttons about which button is currently pressed. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="out_controller_button_state"> The pressed state of all buttons. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerStateGetButtonState(UInt64 controller_state_handle, ref uint out_controller_button_state);
 
-            /// <summary> Nr controller state get button up. </summary>
-            /// <param name="controller_state_handle">  Handle of the controller state.</param>
-            /// <param name="out_controller_button_up"> [in,out] The out controller button up.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the information of all buttons about which button was just released. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="out_controller_button_up"> The data which indicates the just released state of all buttons. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerStateGetButtonUp(UInt64 controller_state_handle, ref uint out_controller_button_up);
 
-            /// <summary> Nr controller state get button down. </summary>
-            /// <param name="controller_state_handle">    Handle of the controller state.</param>
-            /// <param name="out_controller_button_down"> [in,out] The out controller button down.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the information of all buttons about which button was just pressed. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="out_controller_button_down"> The data which indicates the just pressed state of all buttons. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerStateGetButtonDown(UInt64 controller_state_handle, ref uint out_controller_button_down);
 
-            /// <summary> Nr controller state touch state. </summary>
-            /// <param name="controller_state_handle">    Handle of the controller state.</param>
-            /// <param name="out_controller_touch_state"> [in,out] State of the out controller touch.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the information of all touches about which touch is currently pressed. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="out_controller_touch_state"> The pressed state of all touches. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerStateTouchState(UInt64 controller_state_handle, ref uint out_controller_touch_state);
 
-            /// <summary> Nr controller state get touch up. </summary>
-            /// <param name="controller_state_handle"> Handle of the controller state.</param>
-            /// <param name="out_controller_touch_up"> [in,out] The out controller touch up.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the information of all touches about which touch was just released. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="out_controller_touch_up"> The data which indicates the just released state of all touches. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerStateGetTouchUp(UInt64 controller_state_handle, ref uint out_controller_touch_up);
 
-            /// <summary> Nr controller state get touch down. </summary>
-            /// <param name="controller_state_handle">   Handle of the controller state.</param>
-            /// <param name="out_controller_touch_down"> [in,out] The out controller touch down.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the information of all touches about which touch was just pressed. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="out_controller_touch_down"> The data which indicates the just pressed state of all touches. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerStateGetTouchDown(UInt64 controller_state_handle, ref uint out_controller_touch_down);
 
-            /// <summary> Nr controller state get touch pose. </summary>
-            /// <param name="controller_state_handle">   Handle of the controller state.</param>
-            /// <param name="out_controller_touch_pose"> [in,out] The out controller touch pose.</param>
-            /// <returns> A NativeResult. </returns>
+            /// <summary> Get the pose of all touches. </summary>
+            /// <param name="controller_state_handle"> The handle of controller state object. </param>
+            /// <param name="out_controller_touch_pose"> The 2D pose of all touches. </param>
+            /// <returns> The result of operation. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerStateGetTouchPose(UInt64 controller_state_handle, ref NativeVector2f out_controller_touch_pose);
-
-            /// <summary> Nr controller set head pose. </summary>
-            /// <param name="controller_handle">   Handle of the controller.</param>
-            /// <param name="out_controller_pose"> [in,out] The out controller pose.</param>
-            /// <returns> A NativeResult. </returns>
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerSetHeadPose(UInt64 controller_handle, ref NativeMat4f out_controller_pose);
-
-            /// <summary> Nr controller get version. </summary>
-            /// <param name="controller_handle"> Handle of the controller.</param>
-            /// <param name="controller_index">  Zero-based index of the controller.</param>
-            /// <param name="out_version">       The out version.</param>
-            /// <param name="len">               The length.</param>
-            /// <returns> A NativeResult. </returns>
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerGetVersion(UInt64 controller_handle, int controller_index, byte[] out_version, int len);
-
-            /// <summary> Get the handedness left or right. </summary>
-            /// <param name="controller_handle">    The handle of controller state object. </param>
-            /// <param name="handedness_type">      The handedness type returned. </param>
-            /// <returns>The result of operation.</returns>
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRControllerGetHandednessType(UInt64 controller_handle, ref HandednessType handedness_type);
         };
     }
 }

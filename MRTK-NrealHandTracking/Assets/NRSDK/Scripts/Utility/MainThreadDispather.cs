@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -45,6 +45,7 @@ namespace NRKernal
 
         /// <summary> The actions. </summary>
         private List<Action> m_Actions = new List<Action>();
+        private List<Action> m_RunningActions = new List<Action>();
 
         /// <summary> The delayed. </summary>
         private List<MainThreadDispather.DelayedQueueItem> m_Delayed = new List<MainThreadDispather.DelayedQueueItem>();
@@ -156,17 +157,19 @@ namespace NRKernal
         private void Update()
         {
             MainThreadDispather.m_CurrentTime = Time.time;
-            List<Action> actions = this.m_Actions;
-            if (actions.Count > 0)
+            if (m_Actions.Count > 0)
             {
-                lock (actions)
+                lock (m_Actions)
                 {
-                    for (int i = 0; i < this.m_Actions.Count; i++)
-                    {
-                        this.m_Actions[i]();
-                    }
-                    this.m_Actions.Clear();
+                    m_RunningActions.AddRange(m_Actions);
+                    m_Actions.Clear();
                 }
+
+                for (int i = 0; i < m_RunningActions.Count; i++)
+                {
+                    m_RunningActions[i]();
+                }
+                m_RunningActions.Clear();
             }
 
             List<MainThreadDispather.DelayedQueueItem> delayed = this.m_Delayed;
@@ -179,12 +182,18 @@ namespace NRKernal
                         MainThreadDispather.DelayedQueueItem delayedQueueItem = this.m_Delayed[j];
                         if (delayedQueueItem.time <= MainThreadDispather.m_CurrentTime)
                         {
-                            delayedQueueItem.action();
+                            m_RunningActions.Add(delayedQueueItem.action);
                             this.m_Delayed.RemoveAt(j);
                             j--;
                         }
                     }
                 }
+
+                for (int i = 0; i < m_RunningActions.Count; i++)
+                {
+                    m_RunningActions[i]();
+                }
+                m_RunningActions.Clear();
             }
         }
     }

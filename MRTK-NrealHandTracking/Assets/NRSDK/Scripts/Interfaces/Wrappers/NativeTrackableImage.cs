@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -15,7 +15,7 @@ namespace NRKernal
     using UnityEngine;
 
     /// <summary> 6-dof Trackable Image Tracking's Native API . </summary>
-    public partial class NativeTrackableImage
+    internal partial class NativeTrackableImage
     {
         /// <summary> The native interface. </summary>
         private NativeInterface m_NativeInterface;
@@ -32,7 +32,7 @@ namespace NRKernal
         public UInt64 CreateDataBase()
         {
             UInt64 database_handle = 0;
-            var result = NativeApi.NRTrackableImageDatabaseCreate(m_NativeInterface.TrackingHandle, ref database_handle);
+            var result = NativeApi.NRTrackableImageDatabaseCreate(m_NativeInterface.PerceptionHandle, ref database_handle);
             NativeErrorListener.Check(result, this, "CreateDataBase");
             return database_handle;
         }
@@ -42,7 +42,7 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public bool DestroyDataBase(UInt64 database_handle)
         {
-            var result = NativeApi.NRTrackableImageDatabaseDestroy(m_NativeInterface.TrackingHandle, database_handle);
+            var result = NativeApi.NRTrackableImageDatabaseDestroy(m_NativeInterface.PerceptionHandle, database_handle);
             NativeErrorListener.Check(result, this, "DestroyDataBase");
             return result == NativeResult.Success;
         }
@@ -53,7 +53,7 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public bool LoadDataBase(UInt64 database_handle, string path)
         {
-            var result = NativeApi.NRTrackableImageDatabaseLoadDirectory(m_NativeInterface.TrackingHandle, database_handle, path);
+            var result = NativeApi.NRTrackableImageDatabaseLoadDirectory(m_NativeInterface.PerceptionHandle, database_handle, path);
             return result == NativeResult.Success;
         }
 
@@ -64,7 +64,7 @@ namespace NRKernal
         {
             Pose pose = Pose.identity;
             NativeMat4f center_pose_native = NativeMat4f.identity;
-            NativeApi.NRTrackableImageGetCenterPose(m_NativeInterface.TrackingHandle, trackable_handle, ref center_pose_native);
+            NativeApi.NRTrackableImageGetCenterPose(m_NativeInterface.PerceptionHandle, trackable_handle, ref center_pose_native);
 
             ConversionUtility.ApiPoseToUnityPose(center_pose_native, out pose);
             return pose;
@@ -77,8 +77,8 @@ namespace NRKernal
         {
             float extent_x, extent_z;
             extent_x = extent_z = 0;
-            NativeApi.NRTrackableImageGetExtentX(m_NativeInterface.TrackingHandle, trackable_handle, ref extent_x);
-            NativeApi.NRTrackableImageGetExtentZ(m_NativeInterface.TrackingHandle, trackable_handle, ref extent_z);
+            NativeApi.NRTrackableImageGetExtentX(m_NativeInterface.PerceptionHandle, trackable_handle, ref extent_x);
+            NativeApi.NRTrackableImageGetExtentZ(m_NativeInterface.PerceptionHandle, trackable_handle, ref extent_z);
             return new Vector2(extent_x * 0.001f, extent_z * 0.001f);
         }
 

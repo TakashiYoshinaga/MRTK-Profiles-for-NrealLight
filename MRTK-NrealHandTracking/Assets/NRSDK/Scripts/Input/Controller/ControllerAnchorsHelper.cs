@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/         
+* https://www.xreal.com/         
 * 
 *****************************************************************************/
 
@@ -33,7 +33,7 @@ namespace NRKernal
 
     /// <summary>
     /// The class is for user to easily get the transform of common controller anchors. </summary>
-    [HelpURL("https://developer.nreal.ai/develop/unity/controller")]
+    [HelpURL("https://developer.xreal.com/develop/unity/controller")]
     public class ControllerAnchorsHelper : MonoBehaviour
     {
         /// <summary> The gaze pose tracker anchor. </summary>

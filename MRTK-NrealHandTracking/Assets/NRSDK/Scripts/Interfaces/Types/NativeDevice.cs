@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -44,5 +44,15 @@ namespace NRKernal
         ///  Only supported in the version of Enterprise.
         /// </summary>
         MAGENTICE = 5,
+
+        /// <summary> 
+        ///  The center of the displays.
+        /// </summary>
+        HEAD_CENTER = 6,
+
+        /// <summary> 
+        ///  The imu of HMD.
+        /// </summary>
+        IMU = 7,
     }
 }

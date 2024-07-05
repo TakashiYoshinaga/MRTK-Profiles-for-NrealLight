@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -50,7 +50,7 @@ namespace NRKernal
         /// <summary>
         /// Destroys this instance of a subsystem.
         /// </summary>
-        public virtual void Stop()
+        public virtual void Destroy()
         {
             running = false;
         }

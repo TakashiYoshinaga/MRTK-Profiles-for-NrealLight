@@ -177,6 +177,17 @@ namespace NRKernal
         {
         }
     }
+
+    /// <summary> SDK runtime not found error. </summary>
+    public class NRRuntimeNotFoundError : NRNativeError
+    {
+        /// <summary> Constructor. </summary>
+        /// <param name="msg">            The message.</param>
+        /// <param name="innerException"> (Optional) The inner exception.</param>
+        public NRRuntimeNotFoundError(NativeResult result, string msg, Exception innerException = null) : base(result, msg, Level.High, innerException)
+        {
+        }
+    }
     #endregion
 
     #region internal error

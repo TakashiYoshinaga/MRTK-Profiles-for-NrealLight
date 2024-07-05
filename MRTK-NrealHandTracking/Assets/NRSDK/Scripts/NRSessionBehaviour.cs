@@ -1,19 +1,24 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
+
+#if USING_XR_MANAGEMENT && USING_XR_SDK_XREAL
+#define USING_XR_SDK
+#endif
+
 
 namespace NRKernal
 {
     using UnityEngine;
 
     /// <summary>
-    /// Oprate AR system state and handles the session lifecycle for application layer. </summary>
-    [HelpURL("https://developer.nreal.ai/develop/discover/introduction-nrsdk")]
+    /// Operate AR system state and handles the session lifecycle for application layer. </summary>
+    [HelpURL("https://developer.xreal.com/develop/discover/introduction-nrsdk")]
     [ScriptOrder(NativeConstants.NRSESSIONBEHAVIOUR_ORDER)]
     public class NRSessionBehaviour : SingletonBehaviour<NRSessionBehaviour>
     {
@@ -32,19 +37,24 @@ namespace NRKernal
         /// base.Awake() to ensure the static Instance reference is properly created. </summary>
         new void Awake()
         {
-#if NRDEBUG
-            NRDebugger.logLevel = LogLevel.All;
-#elif !UNITY_EDITOR
-            NRDebugger.logLevel = Debug.isDebugBuild ? LogLevel.Debug : LogLevel;
-#else
-            NRDebugger.logLevel = LogLevel;
-#endif
-            Debug.LogFormat("[SessionBehaviour] Awake:  logLevel={0}", NRDebugger.logLevel);
-
             base.Awake();
             if (isDirty) return;
 
-            NRDebugger.Info("[SessionBehaviour] Awake: CreateSession");
+            Debug.LogFormat("[SessionBehaviour] NRSDKPackage Version: {0}", NRVersionInfo.GetNRSDKPackageVersion());
+
+#if NR_PROFILER
+            NRDebugger.logLevel = LogLevel;
+#elif DEVELOPMENT_BUILD
+            NRDebugger.logLevel = LogLevel.Debug;
+#else
+            NRDebugger.logLevel = LogLevel;
+#endif
+
+#if USING_XR_SDK && !UNITY_EDITOR
+            NativeXRPlugin.SetLogLevel((int)NRDebugger.logLevel);
+#endif
+            Debug.LogFormat("[SessionBehaviour] Awake CreateSession: logLevel={0} => {1}, isXR={2}, multiThread={3}, supportMultiResume={4}", 
+                LogLevel, NRDebugger.logLevel, NRFrame.IsXR, SessionConfig.UseMultiThread, SessionConfig.SupportMultiResume);
             NRSessionManager.Instance.CreateSession(this);
         }
 

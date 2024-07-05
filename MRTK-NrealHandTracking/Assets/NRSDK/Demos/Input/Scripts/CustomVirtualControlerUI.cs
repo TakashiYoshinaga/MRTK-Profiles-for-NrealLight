@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -13,7 +13,7 @@ using UnityEngine.UI;
 namespace NRKernal.NRExamples
 {
     /// <summary> A custom virtual controler user interface. </summary>
-    [HelpURL("https://developer.nreal.ai/develop/unity/customize-phone-controller")]
+    [HelpURL("https://developer.xreal.com/develop/unity/customize-phone-controller")]
     public class CustomVirtualControlerUI : MonoBehaviour
     {
         /// <summary> The show control. </summary>

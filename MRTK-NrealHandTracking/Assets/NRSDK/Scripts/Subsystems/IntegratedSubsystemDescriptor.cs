@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -15,7 +15,7 @@ namespace NRKernal
     /// <summary>
     /// Information about a subsystem that can be queried before creating a subsystem instance.
     /// </summary>
-    public class IntegratedSubsystemDescriptor : ISubsystemDescriptor
+    public abstract class IntegratedSubsystemDescriptor : ISubsystemDescriptor
     {
         protected IntegratedSubsystemDescriptor() { }
 
@@ -26,7 +26,8 @@ namespace NRKernal
 
         public ISubsystem subsystem { get; protected set; }
 
-        public virtual ISubsystem Create() => null;
+        public abstract ISubsystem Create();
+        public abstract void Destroy();
     }
 
     public class IntegratedSubsystemDescriptor<TSubsystem> : IntegratedSubsystemDescriptor where TSubsystem : IntegratedSubsystem
@@ -35,7 +36,7 @@ namespace NRKernal
 
         public IntegratedSubsystemDescriptor() { }
 
-        public virtual new TSubsystem Create()
+        public override ISubsystem Create()
         {
             if (!m_SubsystemDict.ContainsKey(id))
             {
@@ -51,6 +52,14 @@ namespace NRKernal
                 }
             }
             return m_SubsystemDict[id];
+        }
+
+        public override void Destroy()
+        {
+            if (m_SubsystemDict.ContainsKey(id))
+            {
+                m_SubsystemDict.Remove(id);
+            }
         }
     }
 }

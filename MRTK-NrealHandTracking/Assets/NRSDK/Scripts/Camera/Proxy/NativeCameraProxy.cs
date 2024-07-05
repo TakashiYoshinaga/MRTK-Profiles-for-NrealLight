@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -37,6 +37,9 @@ namespace NRKernal
         protected int m_LastFrame = -1;
         /// <summary> True if is playing, false if not. </summary>
         protected bool m_IsPlaying = false;
+
+        /// <summary> True if paused, false if not</summary>
+        protected bool m_IsPaused = false;
         /// <summary> Gets a value indicating whether this object is camera playing. </summary>
         /// <value> True if this object is camera playing, false if not. </value>
         public bool IsCamPlaying
@@ -50,7 +53,7 @@ namespace NRKernal
         /// <summary> Interface of external frame consumer. </summary>
         public interface IExternFrameConsumer
         {
-            void UpdateFrame(FrameRawData frame);
+            void UpdateFrame(NativeDevice device, FrameRawData frame);
         }
 
         protected IExternFrameConsumer m_ExternFrameConsumer;
@@ -314,13 +317,31 @@ namespace NRKernal
                 m_CameraFrames.Enqueue(frame);
                 if (m_ExternFrameConsumer != null)
                 {
-                    m_ExternFrameConsumer.UpdateFrame(frame);
+                    m_ExternFrameConsumer.UpdateFrame(NativeDevice.RGB_CAMERA,  frame);
                 }
             }
             else
             {
                 FramePool.Put<FrameRawData>(frame);
             }
+        }
+
+        public void Pause()
+        {
+            if (!m_IsPlaying || m_IsPaused)
+                return;
+
+            m_IsPaused = true;
+            CameraDataProvider.PauseCapture();
+        }
+
+        public void Resume()
+        {
+            if (!m_IsPlaying || !m_IsPaused)
+                return;
+
+            m_IsPaused = false;
+            CameraDataProvider.ResumeCapture();
         }
 
         /// <summary> Stop the camera. </summary>

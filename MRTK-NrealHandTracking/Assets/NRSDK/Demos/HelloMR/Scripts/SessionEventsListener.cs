@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -29,13 +29,30 @@ namespace NRKernal.NRExamples
             NRSessionManager.OnKernalError += OnKernalError;
         }
 
+        void OnDestroy()
+        {
+            NRSessionManager.OnChangeTrackingMode -= OnChangeTrackingMode;
+            NRSessionManager.OnGlassesDisconnect -= OnGlassesDisconnect;
+            NRSessionManager.OnGlassesStateChanged -= OnGlassesStateChanged;
+            NRSessionManager.OnHMDLostTracking -= OnHMDLostTracking;
+            NRSessionManager.OnHMDPoseReady -= OnHMDPoseReady;
+            NRSessionManager.OnKernalError -= OnKernalError;
+            
+        }
+
         /// <summary>
         /// Session kernal error event.
         /// </summary>
         /// <param name="exception">NRRGBCameraDeviceNotFindError, NRPermissionDenyError, NRUnSupportedHandtrackingCalculationError</param>
         private void OnKernalError(NRKernalError exception)
         {
-            NRDebugger.Info("[SessionEventsListener] OnKernalError.");
+            NRDebugger.Info("[SessionEventsListener] OnKernalError: {0}.", exception.GetErrorMsg());
+            if (exception is NRNativeError)
+            {
+                var nativeException = exception as NRNativeError;
+                var nativeErrorCode = nativeException.result;
+                NRDebugger.Info("[SessionEventsListener] native error code is: {0}.", nativeErrorCode);
+            }
         }
 
         private void OnHMDPoseReady()
@@ -58,7 +75,7 @@ namespace NRKernal.NRExamples
             NRDebugger.Info("[SessionEventsListener] OnGlassesDisconnect:" + reason.ToString());
         }
 
-        private void OnChangeTrackingMode(NRHMDPoseTracker.TrackingType origin, NRHMDPoseTracker.TrackingType target)
+        private void OnChangeTrackingMode(TrackingType origin, TrackingType target)
         {
             NRDebugger.Info("[SessionEventsListener] OnChangeTrackingMode, from:{0} to:{1}", origin, target);
         }

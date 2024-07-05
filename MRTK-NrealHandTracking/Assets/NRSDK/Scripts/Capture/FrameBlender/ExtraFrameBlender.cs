@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -23,7 +23,10 @@ namespace NRKernal.Record
         private NRBackGroundRender m_NRBackGroundRender;
         private NRCameraInitializer m_DeviceParamInitializer;
 
+        private CaptureSide m_CaputreSide;
         private RenderTexture m_BlendTexture;
+        private RenderTexture m_BlendTextureLeft;
+        private RenderTexture m_BlendTextureRight;
         /// <summary> Gets or sets the blend texture. </summary>
         /// <value> The blend texture. </value>
         public override RenderTexture BlendTexture
@@ -47,6 +50,7 @@ namespace NRKernal.Record
             m_TargetCamera = camera;
             m_Encoder = encoder;
             BlendMode = param.blendMode;
+            m_CaputreSide = param.captureSide;
 
             m_NRBackGroundRender = m_TargetCamera.gameObject.GetComponent<NRBackGroundRender>();
             if (m_NRBackGroundRender == null)
@@ -59,6 +63,11 @@ namespace NRKernal.Record
             m_TargetCamera.enabled = false;
             m_BlendTexture = UnityExtendedUtility.CreateRenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
             m_TargetCamera.targetTexture = m_BlendTexture;
+            if(m_CaputreSide == CaptureSide.Both)
+            {
+                m_BlendTextureLeft = UnityExtendedUtility.CreateRenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
+                m_BlendTextureRight = UnityExtendedUtility.CreateRenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
+            }
         }
 
         /// <summary> Executes the 'frame' action. </summary>
@@ -87,7 +96,7 @@ namespace NRKernal.Record
             {
                 case BlendMode.VirtualOnly:
                     m_NRBackGroundRender.enabled = false;
-                    m_TargetCamera.Render();
+                    CameraRenderToTarget();
                     break;
                 case BlendMode.RGBOnly:
                 case BlendMode.Blend:
@@ -103,7 +112,7 @@ namespace NRKernal.Record
                         m_BackGroundMat.SetTexture(MainTextureStr, frame.textures[0]);
                     }
                     m_NRBackGroundRender.enabled = true;
-                    m_TargetCamera.Render();
+                    CameraRenderToTarget();
                     break;
                 default:
                     m_NRBackGroundRender.enabled = false;
@@ -114,7 +123,55 @@ namespace NRKernal.Record
             m_Encoder.Commit(BlendTexture, frame.timeStamp);
             FrameCount++;
         }
+        private void CameraRenderToTarget()
+        {
+            if (m_CaputreSide == CaptureSide.Single)
+            {
+                m_TargetCamera.targetTexture = m_BlendTexture;
+                m_TargetCamera.Render();
+            }
+            else if (m_CaputreSide == CaptureSide.Both)
+            {
+                var pos = m_TargetCamera.transform.position;
+                var rotation = m_TargetCamera.transform.rotation;
+                var mat = m_TargetCamera.projectionMatrix;
 
+                var originLCam = NRSessionManager.Instance.NRHMDPoseTracker.leftCamera;
+                var originRCam = NRSessionManager.Instance.NRHMDPoseTracker.rightCamera;
+
+                m_TargetCamera.transform.position = originLCam.transform.position;
+                m_TargetCamera.transform.rotation = originLCam.transform.rotation;
+                m_TargetCamera.projectionMatrix = originLCam.projectionMatrix;
+                m_TargetCamera.targetTexture = m_BlendTextureLeft;
+                m_TargetCamera.Render();
+
+                m_TargetCamera.transform.position = originRCam.transform.position;
+                m_TargetCamera.transform.rotation = originRCam.transform.rotation;
+                m_TargetCamera.projectionMatrix = originRCam.projectionMatrix;
+                m_TargetCamera.targetTexture = m_BlendTextureRight;
+                m_TargetCamera.Render();
+
+                m_TargetCamera.transform.position = pos;
+                m_TargetCamera.transform.rotation = rotation;
+                m_TargetCamera.projectionMatrix = mat;
+
+                MergeRenderTextures(m_BlendTextureLeft, m_BlendTextureRight, m_BlendTexture);
+            }
+        }
+        private void MergeRenderTextures(Texture leftSrc, Texture rightSrc, RenderTexture target)
+        {
+            //Set the RTT in order to render to it
+            Graphics.SetRenderTarget(target);
+
+            //Setup 2D matrix in range 0..1, so nobody needs to care about sized
+            GL.LoadPixelMatrix(0, 1, 1, 0);
+
+            //Then clear & draw the texture to fill the entire RTT.
+            GL.Clear(true, true, new Color(0, 0, 0, 0));
+
+            Graphics.DrawTexture(new Rect(0, 0, 0.5f, 1.0f), leftSrc);
+            Graphics.DrawTexture(new Rect(0.5f, 0, 0.5f, 1.0f), rightSrc);
+        }
         private Material CreatBlendMaterial(BlendMode mode, TextureType texturetype)
         {
             string shader_name;
@@ -132,6 +189,10 @@ namespace NRKernal.Record
 
             m_BlendTexture?.Release();
             m_BlendTexture = null;
+            m_BlendTextureLeft?.Release();
+            m_BlendTextureLeft = null;
+            m_BlendTextureRight?.Release();
+            m_BlendTextureRight = null;
         }
     }
 }

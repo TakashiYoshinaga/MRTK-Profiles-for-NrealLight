@@ -1,10 +1,10 @@
 ﻿using System.Numerics;
 /****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -130,8 +130,8 @@ namespace NRKernal
             Vector3 position = m_Is6dof ? transform.position : Vector3.zero;
             m_CachedWorldMatrix = ConversionUtility.GetTMatrix(position, correctRot);
 
-            NRDebugger.Info("[ControllerTracker] OnRecentering : forward={0}, horRot={1}, vertRot={2}, correctRot={3}", 
-                CameraCenter.forward.ToString("F4"), horizontalRotEuler.ToString("F4"), verticalDegree.ToString("F4"), correctRot.eulerAngles.ToString("F4"));
+            NRDebugger.Info("[ControllerTracker] OnRecentering : forward={0}, horForw={1}, horRot={2}, vertRot={3}, correctRot={4}", 
+                CameraCenter.forward.ToString("F4"), horizontalFoward.ToString("F4"), horizontalRotEuler.ToString("F4"), verticalDegree.ToString("F4"), correctRot.eulerAngles.ToString("F4"));
         }
 
         private void OnWorldPoseReset()

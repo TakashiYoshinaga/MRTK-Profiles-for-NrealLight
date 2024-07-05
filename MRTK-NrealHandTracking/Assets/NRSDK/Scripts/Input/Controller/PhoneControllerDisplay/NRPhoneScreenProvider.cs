@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/         
+* https://www.xreal.com/         
 * 
 *****************************************************************************/
 
@@ -42,7 +42,8 @@ namespace NRKernal
         public float touch_x;
         public float touch_y;
 
-        public void Reset() {
+        public void Reset()
+        {
             for (int i = 0; i < buttons.Length; i++)
             {
                 buttons[i] = false;
@@ -93,6 +94,7 @@ namespace NRKernal
     public interface ISystemButtonStateProvider
     {
         void BindReceiver(ISystemButtonStateReceiver receiver);
+        void Destroy();
     }
 
     public interface ISystemButtonStateReceiver
@@ -118,6 +120,19 @@ namespace NRKernal
             m_UnityActivity = cls_UnityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
             m_AndroidSystemButtonDataProxy = CreateAndroidDataProxy();
             this.RegistFragment(m_UnityActivity, m_AndroidSystemButtonDataProxy);
+            NRKernalUpdater.OnPreUpdate -= OnPreUpdate;
+            NRKernalUpdater.OnPreUpdate += OnPreUpdate;
+        }
+
+        public virtual void Destroy() { }
+
+        public void Pause()
+        {
+            NRKernalUpdater.OnPreUpdate -= OnPreUpdate;
+        }
+
+        public void Resume()
+        {
             NRKernalUpdater.OnPreUpdate += OnPreUpdate;
         }
 
@@ -126,7 +141,7 @@ namespace NRKernal
             this.m_Receiver = receiver;
         }
 
-        public virtual void OnPreUpdate() {}
+        public virtual void OnPreUpdate() { }
 
         public virtual void RegistFragment(AndroidJavaObject unityActivity, ISystemButtonDataProxy proxy) { }
 

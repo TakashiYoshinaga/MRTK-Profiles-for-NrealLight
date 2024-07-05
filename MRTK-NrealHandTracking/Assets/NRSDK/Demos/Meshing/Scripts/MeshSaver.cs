@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -67,8 +67,11 @@ namespace NRKernal.NRExamples
             }
         }
 
-        void IMeshInfoProcessor.UpdateMeshInfo(ulong identifier, NRMeshingBlockState meshingBlockState, Mesh mesh)
+        void IMeshInfoProcessor.UpdateMeshInfo(ulong identifier, NRMeshInfo meshInfo)
         {
+            NRMeshingBlockState meshingBlockState = meshInfo.state;
+            Mesh mesh = meshInfo.baseMesh;
+
             NRDebugger.Debug("[MeshSaver] meshingBlockState: {0} identifier: {1}", meshingBlockState, identifier);
             lock (m_MeshDict)
             {

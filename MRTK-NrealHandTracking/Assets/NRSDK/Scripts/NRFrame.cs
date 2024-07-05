@@ -1,17 +1,25 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
+
+#if USING_XR_MANAGEMENT && USING_XR_SDK_XREAL
+#define USING_XR_SDK
+#endif
 
 namespace NRKernal
 {
     using System;
     using System.Collections.Generic;
     using UnityEngine;
+#if USING_XR_SDK
+    using UnityEngine.XR;
+    using Unity.XR.NRSDK;
+#endif
 
     /// <summary>
     /// Holds information about NR Device's pose in the world coordinate, trackables, etc.. Through
@@ -38,14 +46,28 @@ namespace NRKernal
                 return NRSessionManager.Instance.LostTrackingReason;
             }
         }
-        
-        /// <summary> Gets the nr renderer. </summary>
-        /// <value> The nr renderer. </value>
-        public static NRRenderer NRRenderer
+
+        /// <summary> If sdk is running on xrplugin framework. </summary>
+        /// <value> The value. </value>
+        public static bool IsXR
         {
             get
             {
-                return NRSessionManager.Instance.NRRenderer;
+#if USING_XR_SDK
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
+
+        /// <summary> If sdk is running in mono mode. </summary>
+        /// <value> If sdk is running in mono mode. </value>
+        public static bool MonoMode
+        {
+            get
+            {
+                return NRDevice.Instance.MonoMode;
             }
         }
 
@@ -64,7 +86,7 @@ namespace NRKernal
 
         public static bool isHeadPoseReady { get; private set; } = false;
 
-        /// <summary> Gets head pose by recommond timestamp. </summary>
+        /// <summary> Gets head pose by recommend timestamp. </summary>
         /// <param name="pose">      [in,out] The pose.</param>
         /// <returns> True if it succeeds, false if it fails. </returns>
         [Obsolete("Use 'GetFramePresentHeadPose' instead.")]
@@ -98,8 +120,7 @@ namespace NRKernal
         /// <returns></returns>
         public static bool GetFramePresentHeadPose(ref Pose pose, ref LostTrackingReason lostReason, ref UInt64 timestamp)
         {
-            if (SessionStatus == SessionState.Running &&
-                (NRRenderer == null || NRRenderer.CurrentState == NRRenderer.RendererState.Running))
+            if (NRSessionManager.Instance.IsRunning)
             {
                 isHeadPoseReady = NRSessionManager.Instance.TrackingSubSystem.GetFramePresentHeadPose(ref pose, ref lostReason, ref timestamp);
                 return isHeadPoseReady;
@@ -107,24 +128,11 @@ namespace NRKernal
             return false;
         }
 
-        /// <summary> Get the pose of center camera between left eye and right eye. </summary>
-        /// <value> The center eye pose. </value>
-        public static Pose CenterEyePose
-        {
-            get
-            {
-                Transform leftCamera = NRSessionManager.Instance.NRHMDPoseTracker.leftCamera.transform;
-                Transform rightCamera = NRSessionManager.Instance.NRHMDPoseTracker.rightCamera.transform;
-
-                Vector3 centerEye_pos = (leftCamera.position + rightCamera.position) * 0.5f;
-                Quaternion centerEye_rot = Quaternion.Lerp(leftCamera.rotation, rightCamera.rotation, 0.5f);
-
-                return new Pose(centerEye_pos, centerEye_rot);
-            }
-        }
+        /// <summary> Has we got the eye position from head? </summary>
+        private static bool m_HasGetEyePoseFrameHead = false;
 
         /// <summary> The eye position from head. </summary>
-        private static EyePoseData m_EyePosFromHead;
+        private static EyePoseData m_EyePoseFromHead;
 
         /// <summary> Get the offset position between eye and head. </summary>
         /// <value> The eye pose from head. </value>
@@ -132,13 +140,18 @@ namespace NRKernal
         {
             get
             {
+                if (m_HasGetEyePoseFrameHead)
+                    return m_EyePoseFromHead;
+
                 if (SessionStatus == SessionState.Running)
                 {
-                    m_EyePosFromHead.LEyePose = NRDevice.Subsystem.GetDevicePoseFromHead(NativeDevice.LEFT_DISPLAY);
-                    m_EyePosFromHead.REyePose = NRDevice.Subsystem.GetDevicePoseFromHead(NativeDevice.RIGHT_DISPLAY);
-                    m_EyePosFromHead.RGBEyePose = NRDevice.Subsystem.GetDevicePoseFromHead(NativeDevice.RGB_CAMERA);
+                    m_EyePoseFromHead.LEyePose = NRDevice.Subsystem.GetDevicePoseFromHead(NativeDevice.LEFT_DISPLAY);
+                    m_EyePoseFromHead.REyePose = NRDevice.Subsystem.GetDevicePoseFromHead(NativeDevice.RIGHT_DISPLAY);
+                    m_EyePoseFromHead.CEyePose = NRDevice.Subsystem.GetDevicePoseFromHead(NativeDevice.HEAD_CENTER);
+                    m_EyePoseFromHead.RGBEyePose = NRDevice.Subsystem.GetDevicePoseFromHead(NativeDevice.RGB_CAMERA);
+                    m_HasGetEyePoseFrameHead = true;
                 }
-                return m_EyePosFromHead;
+                return m_EyePoseFromHead;
             }
         }
 
@@ -209,13 +222,28 @@ namespace NRKernal
         {
             get
             {
-#if USING_XR_SDK
-                return NRSessionManager.Instance.TrackingSubSystem.GetHMDTimeNanos();
-#else
                 return m_CurrentPoseTimeStamp;
-#endif
             }
         }
+
+#if USING_XR_SDK
+        static internal List<XRNodeState> m_NodeStates = new List<XRNodeState>();
+        static internal bool GetNodePoseData(List<XRNodeState> nodeStates, XRNode node, out Pose resultPose)
+        {
+            resultPose = Pose.identity;
+            for (int i = 0; i < nodeStates.Count; i++)
+            {
+                var nodeState = nodeStates[i];
+                if (nodeState.nodeType == node)
+                {
+                    bool rst = nodeState.TryGetPosition(out resultPose.position);
+                    rst = rst && nodeState.TryGetRotation(out resultPose.rotation);
+                    return rst;
+                }
+            }
+            return false;
+        }
+#endif
 
         internal static void ResetHeadPose()
         {
@@ -225,6 +253,24 @@ namespace NRKernal
 
         internal static void OnPreUpdate(ref LostTrackingReason lostTrackReason)
         {
+#if USING_XR_SDK && !UNITY_EDITOR
+            Pose pose = Pose.identity;
+            InputTracking.GetNodeStates(m_NodeStates);
+            GetNodePoseData(m_NodeStates, XRNode.Head, out pose);
+
+            lostTrackReason = NativeXRPlugin.GetLostTrackingReason();
+            var timeStamp = NativeXRPlugin.GetFramePresentTime();
+
+            if (NRDebugger.logLevel <= LogLevel.Debug)
+            {
+                var rotEuler = pose.rotation.eulerAngles;
+                NRDebugger.Info("[NRFrame] OnPreUpdate-XR: LostTrackReason={0}, pose={1}-{6}, PresentTime={2}, lastHeadPose={3}, lastPresentTime={4}, frameHandle={5}",
+                    lostTrackReason, pose.ToString("F6"), timeStamp, m_HeadPose.ToString("F6"), m_CurrentPoseTimeStamp, NRSessionManager.Instance.NRSwapChainMan.FrameHandle, rotEuler.ToString("F6"));
+            }
+
+            m_HeadPose = pose;
+            m_CurrentPoseTimeStamp = timeStamp;
+#else
             Pose pose = Pose.identity;
             LostTrackingReason lostReason = LostTrackingReason.NONE;
             ulong timeStamp = 0;
@@ -232,18 +278,20 @@ namespace NRKernal
             if (result)
             {
                 lostTrackReason = lostReason;
-                if (lostReason != LostTrackingReason.PRE_INITIALIZING && lostReason != LostTrackingReason.INITIALIZING)
+                if (lostReason != LostTrackingReason.INITIALIZING)
                 {
                     m_HeadPose = pose;
                     m_CurrentPoseTimeStamp = timeStamp;
                 }
                 else
                 {
-                    NRDebugger.Info("[NRFrame] OnPreUpdate: LostTrackReason={0}, pose={1}, timeStamp={2}, lastHeadPose={3}, lastTimeStamp={4}",
-                        lostReason, pose.ToString("F4"), timeStamp, m_HeadPose.ToString("F4"), m_CurrentPoseTimeStamp);
+                    NRDebugger.Info("[NRFrame] OnPreUpdate: LostTrackReason={0}, pose={1}, PresentTime={2}, lastHeadPose={3}, lastPresentTime={4}, frameHandle={5}",
+                        lostReason, pose.ToString("F4"), timeStamp, m_HeadPose.ToString("F4"), m_CurrentPoseTimeStamp, NRSessionManager.Instance.NRSwapChainMan.FrameHandle);
                 }
             }
-            // NRDebugger.Info("[NRFrame] OnPreUpdate: result={2}, LostTrackReason={3}, pos={0}, headPos={1}, ", pose.ToString("F4"), m_HeadPose.ToString("F4"), result, LostTrackingReason);
+            if (NRDebugger.logLevel <= LogLevel.Debug)
+                NRDebugger.Info("[NRFrame] OnPreUpdate: result={2}, LostTrackReason={3}, presentTime={4}, pos={0}, headPos={1}, ", pose.ToString("F4"), m_HeadPose.ToString("F4"), result, LostTrackingReason, m_CurrentPoseTimeStamp);
+#endif
         }
 
         /// <summary> Get the list of trackables with specified filter. </summary>
@@ -271,6 +319,144 @@ namespace NRKernal
             else
             {
                 return hmdPoseTracker.GetWorldOffsetMatrixFromNative();
+            }
+        }
+
+        /// <summary> Set a plane in camera or global space that acts as the focal plane of the Scene for this frame. </summary>
+        /// <param name="point"> The position of the focal point.</param>
+        /// <param name="normal"> The normal of the plane being viewed at the focal point.</param>
+        /// <param name="spaceType"> Space type of the plane. While NR_REFERENCE_SPACE_VIEW means that the plane is relative to the Camera, NR_REFERENCE_SPACE_GLOBAL means that the plane is in world space.</param>
+        public static void SetFocusPlane(Vector3 point, Vector3 normal, NRReferenceSpaceType spaceType = NRReferenceSpaceType.NR_REFERENCE_SPACE_VIEW)
+        {
+            // NRDebugger.Info("SetFocusPlane: point={0}, normal={1}", point.ToString("F2"), normal.ToString("F2"));
+
+#if USING_XR_SDK
+            if (NRDevice.XRDisplaySubsystem != null && NRDevice.XRDisplaySubsystem.running)
+                NRDevice.XRDisplaySubsystem?.SetFocusPlane(point, normal, Vector3.zero);
+#endif
+            NRSessionManager.Instance.NRSwapChainMan?.SetFocusPlane(point, normal, spaceType);
+        }
+
+        /// <summary> Set a focus point in camera space that acts as the focal point of the Scene for this frame. </summary>
+        /// <param name="distance"> The distance of the focal point relative to camera.</param>
+        public static void SetFocusDistance(float distance)
+        {
+            // NRDebugger.Info("SetFocusDistance: distance={0}", distance);
+            Vector3 point = new Vector3(0, 0, distance);
+            Vector3 normal = -Vector3.forward;
+#if USING_XR_SDK
+            if (NRDevice.XRDisplaySubsystem != null && NRDevice.XRDisplaySubsystem.running)
+                NRDevice.XRDisplaySubsystem?.SetFocusPlane(point, normal, Vector3.zero);
+#endif
+            NRSessionManager.Instance.NRSwapChainMan?.SetFocusPlane(point, normal, NRReferenceSpaceType.NR_REFERENCE_SPACE_VIEW);
+        }
+
+#if USING_XR_SDK
+        internal static TSubsystem CreateXRSubsystem<TDescriptor, TSubsystem>(string id)
+            where TDescriptor : UnityEngine.ISubsystemDescriptor
+            where TSubsystem : class, UnityEngine.ISubsystem
+        {
+            List<TDescriptor> descriptors = new List<TDescriptor>();
+            SubsystemManager.GetSubsystemDescriptors<TDescriptor>(descriptors);
+
+            UnityEngine.ISubsystem subsys = null;
+            if (descriptors.Count > 0)
+            {
+                foreach (var descriptor in descriptors)
+                {
+                    if (String.Compare(descriptor.id, id, true) == 0)
+                    {
+                        subsys = descriptor.Create();
+                    }
+                }
+            }
+            return subsys as TSubsystem;
+        }
+#endif
+
+        internal static TSubsystem CreateSubsystem<TDescriptor, TSubsystem>(string id)
+            where TDescriptor : NRKernal.ISubsystemDescriptor
+            where TSubsystem : class, NRKernal.ISubsystem
+        {
+            List<TDescriptor> descriptors = new List<TDescriptor>();
+            NRSubsystemManager.GetSubsystemDescriptors(descriptors);
+
+            NRKernal.ISubsystem subsys = null;
+            foreach (var descriptor in descriptors)
+            {
+                if (descriptor.id.Equals(id))
+                {
+                    subsys = descriptor.Create();
+                }
+            }
+            return subsys as TSubsystem;
+        }
+
+        internal static void DestroySubsystem<TDescriptor, TSubsystem>(string id)
+            where TDescriptor : NRKernal.ISubsystemDescriptor
+            where TSubsystem : class, NRKernal.ISubsystem
+        {
+            List<TDescriptor> descriptors = new List<TDescriptor>();
+            NRSubsystemManager.GetSubsystemDescriptors(descriptors);
+
+            foreach (var descriptor in descriptors)
+            {
+                if (descriptor.id.Equals(id))
+                {
+                    descriptor.Destroy();
+                }
+            }
+        }
+
+        public static int targetFrameRate
+        {
+            get
+            {
+#if USING_XR_SDK && !UNITY_EDITOR
+                return NativeXRPlugin.GetTargetFrameRate();
+#else
+                return Application.targetFrameRate;
+#endif
+            }
+            set
+            {
+#if USING_XR_SDK && !UNITY_EDITOR
+                NativeXRPlugin.SetTargetFrameRate(value);
+#else
+                Application.targetFrameRate = value;
+#endif
+            }
+        }
+        
+        /// <summary> Gets a value indicating whether this object is linear color space. </summary>
+        /// <value> True if this object is linear color space, false if not. </value>
+        public static bool isLinearColorSpace
+        {
+            get
+            {
+                return QualitySettings.activeColorSpace == ColorSpace.Linear;
+            }
+        }
+
+        public static void Destroy()
+        {
+            isHeadPoseReady = false;
+            m_HasGetEyePoseFrameHead = false;
+            m_CurrentPoseTimeStamp = 0;
+            m_HeadPose = Pose.identity;
+        }
+
+        public static bool isXRRenderMultiview
+        {
+            get
+            {
+                // return false;
+#if USING_XR_SDK
+                NRSettings setting = NRXRLoader.GetSettings();
+                return setting.m_StereoRenderingModeAndroid == NRSettings.StereoRenderingModeAndroid.Multiview;
+#else
+                return false;
+#endif
             }
         }
     }

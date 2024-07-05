@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -13,15 +13,15 @@ namespace NRKernal
     using UnityEngine;
 
     /// <summary>
-    /// A Trackable in the real world detected by NRInternel. The base class of TrackablePlane and
+    /// A Trackable in the real world detected by NRInternal. The base class of TrackablePlane and
     /// TrackableImage.Through this class, application can get the infomation of a trackable object. </summary>
     public abstract class NRTrackable
     {
         /// <summary> Handle of the trackable native. </summary>
-        internal UInt64 TrackableNativeHandle = 0;
+        public UInt64 TrackableNativeHandle = 0;
 
         private NRTrackableSubsystem m_TrackableSubsystem;
-        internal NRTrackableSubsystem TrackableSubsystem
+        public NRTrackableSubsystem TrackableSubsystem
         {
             get
             {

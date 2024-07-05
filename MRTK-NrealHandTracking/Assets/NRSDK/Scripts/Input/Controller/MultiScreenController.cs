@@ -1,9 +1,9 @@
-﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+/****************************************************************************
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -32,13 +32,18 @@ namespace NRKernal
             this.m_Receiver = receiver;
             InitSystemButtonEvent();
         }
+        
+        public void Destroy() {}
 
         /// <summary> Initializes the system button event. </summary>
         private void InitSystemButtonEvent()
         {
-            Trigger.TriggerEvent += OnBtnTrigger;
-            App.TriggerEvent += OnBtnTrigger;
-            Home.TriggerEvent += OnBtnTrigger;
+            if (Trigger != null)
+                Trigger.TriggerEvent += OnBtnTrigger;
+            if (App != null)
+                App.TriggerEvent += OnBtnTrigger;
+            if (Home != null)
+                Home.TriggerEvent += OnBtnTrigger;
         }
 
         /// <summary> Executes the 'button trigger' action. </summary>
@@ -98,23 +103,30 @@ namespace NRKernal
         private void CalculateTouchPos(GameObject go, RaycastResult racastInfo)
         {
             RectTransform rect = go.GetComponent<RectTransform>();
-            Vector3[] v = new Vector3[4];
+            Vector3[] v        = new Vector3[4];
             rect.GetWorldCorners(v);
 
-            var touchToCenter = racastInfo.worldPosition - go.transform.position;
-            var rightToCenter = (v[3] - v[0]) * 0.5f;
-            var topToCenter = (v[1] - v[0]) * 0.5f;
-            var halfWidth = (v[3] - v[0]).magnitude * 0.5f;
-            var halfHeight = (v[1] - v[0]).magnitude * 0.5f;
-            var alpha = Vector3.Angle(rightToCenter, touchToCenter);
-            var touchToX = (touchToCenter * Mathf.Cos(alpha * Mathf.PI / 180)).magnitude;
-            var touchToY = (touchToCenter * Mathf.Sin(alpha * Mathf.PI / 180)).magnitude;
+            var rightToCenter  = (v[3] - v[0]) * 0.5f;
+            var topToCenter    = (v[1] - v[0]) * 0.5f;
+            var width          = (v[3] - v[0]).magnitude;
+            var height         = (v[1] - v[0]).magnitude;
 
-            bool x_forward = Vector3.Dot(touchToCenter, rightToCenter) > 0;
-            bool y_forward = Vector3.Dot(touchToCenter, topToCenter) > 0;
+            var rectCenter     = go.transform.position;
+            rectCenter.x       += width * (0.5f - rect.pivot.x);
+            rectCenter.y       += height * (0.5f - rect.pivot.y);
+            var touchToCenter  = racastInfo.worldPosition - rectCenter;
+           
+            var halfWidth      = width * 0.5f;
+            var halfHeight     = height * 0.5f;
+            var alpha          = Vector3.Angle(rightToCenter, touchToCenter);
+            var touchToX       = (touchToCenter * Mathf.Cos(alpha * Mathf.PI / 180)).magnitude;
+            var touchToY       = (touchToCenter * Mathf.Sin(alpha * Mathf.PI / 180)).magnitude;
 
-            var touchx = touchToX > halfWidth ? (x_forward ? 1f : -1f) : (x_forward ? touchToX / halfWidth : -touchToX / halfWidth);
-            var touchy = touchToY > halfHeight ? (y_forward ? 1f : -1f) : (y_forward ? touchToY / halfHeight : -touchToY / halfHeight);
+            bool x_forward     = Vector3.Dot(touchToCenter, rightToCenter) > 0;
+            bool y_forward     = Vector3.Dot(touchToCenter, topToCenter) > 0;
+
+            var touchx         = touchToX > halfWidth ? (x_forward ? 1f : -1f) : (x_forward ? touchToX / halfWidth : -touchToX / halfWidth);
+            var touchy         = touchToY > halfHeight ? (y_forward ? 1f : -1f) : (y_forward ? touchToY / halfHeight : -touchToY / halfHeight);
             m_SystemButtonState.touch_x = touchx;
             m_SystemButtonState.touch_y = touchy;
         }

@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -50,6 +50,7 @@ namespace NRKernal
             return updateObj.AddComponent<NRKernalUpdater>();
         }
 
+        internal static event Action OnEnterUpdate;
         /// <summary> Event queue for all listeners interested in OnPreUpdate events. </summary>
         public static event Action OnPreUpdate;
         /// <summary> Event queue for all listeners interested in OnUpdate events. </summary>
@@ -68,6 +69,7 @@ namespace NRKernal
             long curFrame = System.DateTime.Now.Ticks;
             long duration = curFrame - lastFrame;
 #endif
+            OnEnterUpdate?.Invoke();
             OnPreUpdate?.Invoke();
             OnUpdate?.Invoke();
             OnPostUpdate?.Invoke();

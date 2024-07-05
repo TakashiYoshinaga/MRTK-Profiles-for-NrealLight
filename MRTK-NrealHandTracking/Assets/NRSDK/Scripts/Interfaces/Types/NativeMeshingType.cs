@@ -1,16 +1,14 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
 namespace NRKernal
 {
-    using System.Runtime.InteropServices;
-
     /// <summary> Request flags for the meshing system. </summary>
     public enum NRMeshingFlags
     {
@@ -31,21 +29,29 @@ namespace NRKernal
         NR_MESHING_BLOCK_STATE_UNCHANGED,
     };
 
-    /// <summary> A transform struct in right-hand coordinate system </summary>
-    [StructLayout(LayoutKind.Sequential)]
-    public struct NRTransform
+    /// <summary> Struct contains information of a block. </summary>
+    public struct BlockInfo
     {
-        public NativeVector3f position;
-        public NativeVector4f rotation;
-    };
+        public ulong identifier;
+        public ulong timestamp;
+        public NRMeshingBlockState blockState;
+        public NRMeshingFlags meshingFlag;
+    }
 
-    /// <summary> Axis aligned bounding box. </summary>
-    [StructLayout(LayoutKind.Sequential)]
-    public struct NRExtents
+    /// <summary>
+    /// Semantic label for meshing vertices
+    /// </summary>
+    public enum NRMeshingVertexSemanticLabel : byte
     {
-        /// The center of the bounding box
-        public NRTransform transform;
-        /// The size of the bounding box
-        public NativeVector3f extents;
-    };
+        Background = 0,
+        Wall = 1,
+        Building = 2,
+        Floor = 4,
+        Ceiling = 5,
+        Highway = 6,
+        Sidewalk = 7,
+        Grass = 8,
+        Door = 10,
+        Table = 11,
+    }
 }

@@ -1,22 +1,29 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
 namespace NRKernal
 {
-    /// <summary> Holds information about Nreal SDK version info. </summary>
+    /// <summary> Holds information about Xreal SDK version info. </summary>
     public class NRVersionInfo
     {
+        private static readonly string sUnityPackageVersion = "20240619143658";
+
         /// <summary> Gets the version. </summary>
         /// <returns> The version. </returns>
         public static string GetVersion()
         {
-            return NativeVersion.GetVersion();
+            return NativeAPI.GetVersion();
+        }
+
+        public static string GetNRSDKPackageVersion()
+        {
+            return sUnityPackageVersion;
         }
     }
 }

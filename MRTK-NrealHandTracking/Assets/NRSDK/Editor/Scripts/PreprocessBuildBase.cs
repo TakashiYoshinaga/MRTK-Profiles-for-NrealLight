@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -84,8 +84,9 @@ namespace NRKernal
     <activity android:name='com.unity3d.player.UnityPlayerActivity'>
       <intent-filter>
         <action android:name='android.intent.action.MAIN' />
-        <category android:name='android.intent.category.INFO' tools:node='replace'/>
+        <category android:name='android.intent.category.LAUNCHER' />
       </intent-filter>
+      <meta-data android:name=""unityplayer.UnityActivity"" android:value=""true"" />
     </activity>
     <meta-data android:name='nreal_sdk' android:value='true'/>
     <meta-data android:name='com.nreal.supportDevices' android:value=''/>
@@ -94,8 +95,6 @@ namespace NRKernal
 </manifest>
         ";
 
-        /// <summary> True if is show on desktop, false if not. </summary>
-        private const bool isShowOnDesktop = true;
         /// <summary> Executes the 'preprocess build for android' action. </summary>
         [MenuItem("NRSDK/PreprocessBuildForAndroid")]
         public static void OnPreprocessBuildForAndroid()
@@ -109,20 +108,17 @@ namespace NRKernal
             {
                 Directory.CreateDirectory(basePath);
             }
-            string xmlPath = Application.dataPath + "/Plugins/Android/AndroidManifest.xml";
 
+            string xmlPath = Application.dataPath + "/Plugins/Android/AndroidManifest.xml";
             if (!File.Exists(xmlPath))
             {
                 string xml = DefaultXML.Replace("\'", "\"");
-                if (isShowOnDesktop)
-                {
-                    xml = xml.Replace("<category android:name=\"android.intent.category.INFO\" tools:node=\"replace\"/>",
-                       "<category android:name=\"android.intent.category.LAUNCHER\" />");
-                }
                 File.WriteAllText(xmlPath, xml);
             }
 
             AutoGenerateAndroidManifest(xmlPath);
+
+            NRProjectConfigHelper.ApplySupportMultiResumeConfig();
 
             ApplySettingsToConfig();
             AutoGenerateAndroidGradleTemplate();
@@ -163,7 +159,7 @@ namespace NRKernal
             foreach (var asset in assets)
             {
                 string path = AssetDatabase.GUIDToAssetPath(asset);
-                if (path.Contains("NRSDKExperimental") && path.EndsWith(".java"))
+                if (path.Contains("NRSDK") && path.EndsWith(".java"))
                 {
                     javaDir = Path.GetDirectoryName(path);
                     break;
@@ -190,7 +186,7 @@ namespace NRKernal
             {
                 string gradleInProject = Application.dataPath + "/Plugins/Android/" + gradleFile;
                 AndroidGradleTemplate gradleTmp = new AndroidGradleTemplate(gradleInProject);
-                gradleTmp.AddDenpendency("implementation 'com.google.android.exoplayer:exoplayer:2.13.2'");
+                gradleTmp.AddDenpendency("implementation 'com.google.android.exoplayer:exoplayer:2.13.3'");
                 gradleTmp.PreprocessGradleFile();
             }
             EditorUtility.DisplayDialog("Tips", "Added ExoPlayer library dependency. The scene Overlay-VideoPlayer now supports DRM video playback.", "OK");
@@ -207,7 +203,9 @@ namespace NRKernal
             //androidManifest.SetCameraPermission();
             androidManifest.SetBlueToothPermission();
             androidManifest.SetSDKMetaData();
-            androidManifest.SetAPKDisplayedOnLauncher(isShowOnDesktop);
+
+            NRProjectConfig projectConfig = NRProjectConfigHelper.GetProjectConfig();
+            androidManifest.RefreshActivityMainAction(projectConfig.supportMultiResume);
 
             androidManifest.Save();
         }
@@ -241,7 +239,7 @@ namespace NRKernal
             }
         }
 
-        /// In order to support 'queries' in manifest, gradle plugin must be higher than 3.4.3. 
+        /// In order to support 'queries' in manifest, gradle plugin must be higher than 4.2.2. 
         /// For unity version lower than 2020, this can be modified by using 'Custom Gradle Template', then modify the gradle plugin version in template file
         public static void AutoGenerateAndroidGradleTemplate()
         {
@@ -299,13 +297,13 @@ namespace NRKernal
         /// <param name="templateFileName"> Gradle file name. </param>
         private static void AutoGenerateAndroidGradleTemplate(string templateFileName)
         {
-            if(!UseCustomGradleFile(templateFileName))
+            if (!UseCustomGradleFile(templateFileName))
             {
                 return;
             }
             string gradleInProject = Application.dataPath + "/Plugins/Android/" + templateFileName;
             AndroidGradleTemplate gradleTmp = new AndroidGradleTemplate(gradleInProject);
-            gradleTmp.SetMinPluginVersion(3, 4, 3);
+            gradleTmp.SetMinPluginVersion(4, 2, 2);
             gradleTmp.PreprocessGradleFile();
         }
 

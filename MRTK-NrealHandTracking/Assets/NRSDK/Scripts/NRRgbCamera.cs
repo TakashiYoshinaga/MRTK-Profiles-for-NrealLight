@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -73,8 +73,8 @@ namespace NRKernal
         public override void UpdateFrame(UInt64 camera_handle, UInt64 camera_image_handle, UInt64 userdata)
         {
             int RawDataSize = 0;
-            this.CameraDataProvider.GetRawData(camera_image_handle, (int)NativeDevice.RGB_CAMERA, ref this.m_TexturePtr, ref RawDataSize);
-            var timestamp = this.CameraDataProvider.GetHMDTimeNanos(camera_image_handle, (int)NativeDevice.RGB_CAMERA);
+            this.CameraDataProvider.GetRawData(camera_image_handle, NativeDevice.RGB_CAMERA, ref this.m_TexturePtr, ref RawDataSize);
+            var timestamp = this.CameraDataProvider.GetHMDTimeNanos(camera_image_handle, NativeDevice.RGB_CAMERA);
             this.QueueFrame(this.m_TexturePtr, RawDataSize, timestamp);
             this.CameraDataProvider.DestroyImage(camera_image_handle);
         }

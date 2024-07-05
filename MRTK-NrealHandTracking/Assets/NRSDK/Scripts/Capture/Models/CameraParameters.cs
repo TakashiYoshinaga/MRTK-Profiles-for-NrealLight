@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -21,14 +21,16 @@ namespace NRKernal.Record
             this.camMode = webCamMode;
             this.hologramOpacity = 1f;
             this.frameRate = NativeConstants.RECORD_FPS_DEFAULT;
+            this.captureSide = CaptureSide.Single;
 
             this.cameraResolutionWidth = 1280;
             this.cameraResolutionHeight = 720;
 
-            this.pixelFormat = CapturePixelFormat.BGRA32;
+            this.pixelFormat = CapturePixelFormat.PNG;
             this.blendMode = mode;
             this.audioState = NRVideoCapture.AudioState.ApplicationAndMicAudio;
             this.mediaProjection = null;
+            this.lockRoll = false;
         }
 
         /// <summary> The opacity of captured holograms. </summary>
@@ -64,5 +66,9 @@ namespace NRKernal.Record
 
         /// <summary> The blend mode of camera output. </summary>
         public BlendMode blendMode { get; set; }
+
+        public CaptureSide captureSide { get; set; }
+        /// <summary>lock rotation on camera roll</summary>
+        public bool lockRoll { get; set; }
     }
 }

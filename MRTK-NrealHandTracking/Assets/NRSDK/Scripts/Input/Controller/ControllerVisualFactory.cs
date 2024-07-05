@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -29,15 +29,15 @@ namespace NRKernal
             {
                 case ControllerVisualType.None:
                     return null;
-                case ControllerVisualType.NrealLight:
-                    prefabPath = folderPath + "nreal_light_controller_visual";
+                case ControllerVisualType.XrealLight:
+                    prefabPath = folderPath + "xreal_light_controller_visual";
                     break;
                 case ControllerVisualType.Phone:
                     prefabPath = folderPath + "phone_controller_visual";
                     break;
                 default:
                     NRDebugger.Error("Can not find controller visual for: " + visualType + ", set to default visual");
-                    prefabPath = folderPath + "nreal_light_controller_visual";
+                    prefabPath = folderPath + "xreal_light_controller_visual";
                     break;
             }
             if (!string.IsNullOrEmpty(prefabPath))
@@ -63,7 +63,7 @@ namespace NRKernal
                 case ControllerType.CONTROLLER_TYPE_PHONE:
                     return ControllerVisualType.Phone;
                 default:
-                    return ControllerVisualType.NrealLight;
+                    return ControllerVisualType.XrealLight;
             }
         }
     }

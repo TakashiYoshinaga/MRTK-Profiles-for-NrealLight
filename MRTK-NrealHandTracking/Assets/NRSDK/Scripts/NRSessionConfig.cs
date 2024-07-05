@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+* Copyright 2019 Xreal Techonology Limited. All rights reserved.
 *                                                                                                                                                          
 * This file is part of NRSDK.                                                                                                          
 *                                                                                                                                                           
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 * 
 *****************************************************************************/
 
@@ -38,7 +38,17 @@ namespace NRKernal
         
         /// <summary> Chooses whether to kill process while receive OnGlassesDisconnectEvent for NOTIFY_TO_QUIT_APP reason. </summary>
         [Tooltip("Chooses whether to force kill while receive OnGlassesDisconnectEvent for NOTIFY_TO_QUIT_APP reason.")]
-        public bool ForceKillWhileGlassSwitchMode = true;
+        public bool ForceKillWhileGlassesSwitchMode = true;
+        
+#if ENABLE_MONO_MODE
+        /// <summary> Chooses  whether to support to run in mono mode.")]. </summary>
+        [Tooltip("Chooses whether to support to run in mono mode.")]
+        public bool SupportMonoMode = false;
+#else
+        public bool SupportMonoMode { 
+            get { return false; }
+        }
+#endif
 
         /// <summary> An error prompt will pop up when the device fails to connect. </summary>
         [Tooltip("An error prompt will pop up when the device fails to connect.")]
@@ -49,12 +59,8 @@ namespace NRKernal
         public NRTrackingModeChangedTip TrackingModeChangeTipPrefab;
 
         /// <summary> It will be read automatically from PlayerdSetting. </summary>
-        [HideInInspector]
-        public bool UseMultiThread
-        {
-            get;
-            private set;
-        }
+        [Tooltip("It will be read automatically from PlayerdSetting.")]
+        public bool UseMultiThread = false;
         
         /// <summary> The NRProjectConfig whick is global unique. All NRSessionConfig in project should refer to the same NRProjectConfig. </summary>
         [SerializeField]
@@ -66,6 +72,15 @@ namespace NRKernal
             get
             {
                 return ProjectConfig;
+            }
+        }
+
+        /// <summary> whether to support to run in multi-resume mode. </summary>
+        public bool SupportMultiResume
+        {
+            get
+            {
+                return ProjectConfig.supportMultiResume;
             }
         }
 
@@ -105,20 +120,22 @@ namespace NRKernal
         /// <param name="other"> .</param>
         public void CopyFrom(NRSessionConfig other)
         {
-            PlaneFindingMode = other.PlaneFindingMode;
-            ImageTrackingMode = other.ImageTrackingMode;
-            TrackingImageDatabase = other.TrackingImageDatabase;
-            GlassesErrorTipPrefab = other.GlassesErrorTipPrefab;
-            TrackingModeChangeTipPrefab = other.TrackingModeChangeTipPrefab;
-            UseMultiThread = other.UseMultiThread;
-            EnableNotification = other.EnableNotification;
-            ForceKillWhileGlassSwitchMode = other.ForceKillWhileGlassSwitchMode;
-            ProjectConfig = other.ProjectConfig;
+            PlaneFindingMode                = other.PlaneFindingMode;
+            ImageTrackingMode               = other.ImageTrackingMode;
+            TrackingImageDatabase           = other.TrackingImageDatabase;
+            GlassesErrorTipPrefab           = other.GlassesErrorTipPrefab;
+            TrackingModeChangeTipPrefab     = other.TrackingModeChangeTipPrefab;
+            EnableNotification              = other.EnableNotification;
+            ForceKillWhileGlassesSwitchMode = other.ForceKillWhileGlassesSwitchMode;
+#if ENABLE_MONO_MODE
+            SupportMonoMode                 = other.SupportMonoMode;
+#endif
+            ProjectConfig                   = other.ProjectConfig;
         }
 
-        public bool IsTargetDevice(NRDeviceType device)
+        public bool IsTargetDevice(NRDeviceCategory device)
         {
-            return ProjectConfig ? ProjectConfig.targetDeviceTypes.Contains(device) : false;
+            return ProjectConfig ? ProjectConfig.targetDevices.Contains(device) : false;
         }
 
         public string GetTargetDeviceTypesDesc()

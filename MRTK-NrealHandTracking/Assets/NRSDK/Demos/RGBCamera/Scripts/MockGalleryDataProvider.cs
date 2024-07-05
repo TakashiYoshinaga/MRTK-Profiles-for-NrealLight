@@ -8,7 +8,7 @@ namespace NRKernal.NRExamples
     {
         public void InsertImage(byte[] data, string displayName, string folderName)
         {
-            string path = string.Format("{0}/NrealShots/{1}", Application.persistentDataPath, folderName);
+            string path = string.Format("{0}/XrealShots/{1}", Application.persistentDataPath, folderName);
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);

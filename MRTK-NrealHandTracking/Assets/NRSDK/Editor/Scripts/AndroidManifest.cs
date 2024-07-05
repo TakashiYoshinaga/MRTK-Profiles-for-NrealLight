@@ -1,9 +1,9 @@
 ﻿/****************************************************************************
-* Copyright 2019 Nreal Techonology Limited.All rights reserved.
+* Copyright 2019 Xreal Techonology Limited.All rights reserved.
 *
 * This file is part of NRSDK.
 *
-* https://www.nreal.ai/        
+* https://www.xreal.com/        
 *
 *****************************************************************************/
 
@@ -101,15 +101,7 @@ namespace NRKernal
             return SelectSingleNode("/manifest/application/activity[intent-filter/action/@android:name='android.intent.action.MAIN' and " +
                     "intent-filter/category/@android:name='android.intent.category.LAUNCHER']", nameSpaceManager);
         }
-
-        /// <summary> Gets activity with information intent. </summary>
-        /// <returns> The activity with information intent. </returns>
-        internal XmlNode GetActivityWithInfoIntent()
-        {
-            return SelectSingleNode("/manifest/application/activity[intent-filter/action/@android:name='android.intent.action.MAIN' and " +
-                   "intent-filter/category/@android:name='android.intent.category.INFO']", nameSpaceManager);
-        }
-
+        
         /// <summary> Sets external storage. </summary>
         /// <param name="flag"> True to flag.</param>
         internal void SetExternalStorage(bool flag)
@@ -241,51 +233,64 @@ namespace NRKernal
             }
         }
 
-        /// <summary> Sets a pk displayed on launcher. </summary>
-        /// <param name="show"> True to show, false to hide.</param>
-        internal void SetAPKDisplayedOnLauncher(bool show)
+        /// <summary> Refresh the action.main action:
+        /// while on multi-resume mode, the main and launcher intent is removed from unityPlayerActivity;
+        /// while on none multi-resume mode, the main and launcher intent is added to unityPlayerActivity. </summary>
+        internal void RefreshActivityMainAction(bool supportMultiResume)
         {
-            var activity = GetActivityWithLaunchIntent();
-            if (activity == null)
+            var activityNode = GetActivityWithLaunchIntent();
+            if (activityNode == null)
             {
-                activity = GetActivityWithInfoIntent();
+                activityNode = SelectSingleNode("/manifest/application/activity[@android:name='com.unity3d.player.UnityPlayerActivity']", nameSpaceManager);
             }
 
-            var intentfilter = SelectSingleNode("/manifest/application/activity/intent-filter[action/@android:name='android.intent.action.MAIN']", nameSpaceManager);
-            var categoryInfo = SelectSingleNode("/manifest/application/activity/intent-filter/category[@android:name='android.intent.category.INFO']", nameSpaceManager);
-            var categoryLauncher = SelectSingleNode("/manifest/application/activity/intent-filter/category[@android:name='android.intent.category.LAUNCHER']", nameSpaceManager);
-
-            if (show)
+            if (activityNode == null)
+                return;
+            
+            // Create or modify intent-filter
+            var intentFilterNode = activityNode.SelectSingleNode("intent-filter", nameSpaceManager);
+            if (supportMultiResume)
             {
-                // Add launcher category
-                XmlElement newcategory = CreateElement("category");
-                XmlAttribute newAttribute = CreateAndroidAttribute("name", "android.intent.category.LAUNCHER");
-                newcategory.Attributes.Append(newAttribute);
-                if (categoryInfo != null)
-                {
-                    intentfilter.ReplaceChild(newcategory, categoryInfo);
-                }
-                else if (categoryLauncher == null)
-                {
-                    intentfilter.AppendChild(newcategory);
-                }
+                if (intentFilterNode == null)
+                    return;
+
+                var actionMainNode = intentFilterNode.SelectSingleNode("action[@android:name='android.intent.action.MAIN']", nameSpaceManager);
+                if (actionMainNode != null)
+                    intentFilterNode.RemoveChild(actionMainNode);
+                
+                var launcherNode = intentFilterNode.SelectSingleNode("category[@android:name='android.intent.category.LAUNCHER']", nameSpaceManager);
+                if (launcherNode != null)
+                    intentFilterNode.RemoveChild(launcherNode);
+                if (!intentFilterNode.HasChildNodes)
+                    activityNode.RemoveChild(intentFilterNode);
             }
             else
             {
-                // Add info category
-                XmlElement newcategory = CreateElement("category");
-                XmlAttribute newAttribute = CreateAndroidAttribute("name", "android.intent.category.INFO");
-                newcategory.Attributes.Append(newAttribute);
-                newAttribute = CreateAndroidAttribute("node", "replace", "tools");
-                newcategory.Attributes.Append(newAttribute);
-
-                if (categoryLauncher != null)
+                if (intentFilterNode == null)
                 {
-                    intentfilter.ReplaceChild(newcategory, categoryLauncher);
+                    // If intent-filter does not exist, create a new one
+                    intentFilterNode = CreateElement("intent-filter");
+                    activityNode.AppendChild(intentFilterNode);
                 }
-                else if (categoryInfo == null)
+
+                var actionMainNode = intentFilterNode.SelectSingleNode("action[@android:name='android.intent.action.MAIN']", nameSpaceManager);
+                if (actionMainNode == null)
                 {
-                    intentfilter.AppendChild(newcategory);
+                    // If main action does not exist, create a new one
+                    XmlElement newAction = CreateElement("action");
+                    XmlAttribute newActionAttr = CreateAndroidAttribute("name", "android.intent.action.MAIN");
+                    newAction.Attributes.Append(newActionAttr);
+                    intentFilterNode.AppendChild(newAction);
+                }
+                
+                var launcherNode = intentFilterNode.SelectSingleNode("category[@android:name='android.intent.category.LAUNCHER']", nameSpaceManager);
+                if (launcherNode == null)
+                {
+                    // If luancher category does not exist, create a new one
+                    XmlElement newCategory = CreateElement("category");
+                    XmlAttribute newLauncherAttr = CreateAndroidAttribute("name", "android.intent.category.LAUNCHER");
+                    newCategory.Attributes.Append(newLauncherAttr);
+                    intentFilterNode.AppendChild(newCategory);
                 }
             }
         }

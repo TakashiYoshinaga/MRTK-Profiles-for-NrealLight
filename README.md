@@ -22,6 +22,8 @@ https://github.com/microsoft/MixedRealityToolkit-Unity/releases/tag/v2.8.2
 Unity 2022.3.20f1
 <br>
 ## Tutorial
+You can immediately use the sample scenes by opening the `MRTK-NrealHandTracking` folder in this repository with the Unity Editor.  
+Instead, if you want to install only this tool into your own project, please refer to the instructions below.  
 https://youtu.be/-bFwu-2yyqw
 <br>
 [![](https://img.youtube.com/vi/-bFwu-2yyqw/0.jpg)](https://www.youtube.com/watch?v=-bFwu-2yyqw)
@@ -33,7 +35,9 @@ https://youtu.be/-bFwu-2yyqw
 ・NRInput_MRTK<br>
 ・NRCameraRig_MRTK<br>
 <br>
-(2) Use following version if you are using DevKit.  
+(2) Do not forget to replace `MixedRealityInputSystem.cs` file.
+<br><br>
+(3) Use following version if you are using DevKit.  
 https://github.com/TakashiYoshinaga/MRTK-Profiles-for-NrealLight/releases/tag/v1.0.2
 
 ## Trouble Shoot

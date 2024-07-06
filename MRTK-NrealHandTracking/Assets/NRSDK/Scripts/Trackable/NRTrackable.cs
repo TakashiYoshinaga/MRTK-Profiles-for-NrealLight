@@ -18,10 +18,10 @@ namespace NRKernal
     public abstract class NRTrackable
     {
         /// <summary> Handle of the trackable native. </summary>
-        public UInt64 TrackableNativeHandle = 0;
+        internal UInt64 TrackableNativeHandle = 0;
 
         private NRTrackableSubsystem m_TrackableSubsystem;
-        public NRTrackableSubsystem TrackableSubsystem
+        internal NRTrackableSubsystem TrackableSubsystem
         {
             get
             {

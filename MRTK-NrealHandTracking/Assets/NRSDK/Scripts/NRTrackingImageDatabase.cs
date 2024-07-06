@@ -31,7 +31,7 @@ namespace NRKernal
 
         /// <summary> Information describing the raw. </summary>
         [SerializeField]
-        protected byte[] m_RawData = null;
+        private byte[] m_RawData = null;
         /// <summary> Gets information describing the raw. </summary>
         /// <value> Information describing the raw. </value>
         public byte[] RawData
@@ -68,7 +68,7 @@ namespace NRKernal
 #if UNITY_EDITOR
         /// <summary> True if is raw data dirty, false if not. </summary>
         [SerializeField]
-        protected bool m_IsRawDataDirty = true;
+        private bool m_IsRawDataDirty = true;
 
         /// <summary> The CLI version. </summary>
         [SerializeField]
@@ -177,7 +177,7 @@ namespace NRKernal
 
         
         /// <summary> Rebuilds the database asset, if needed. </summary>
-        public virtual void BuildIfNeeded()
+        public void BuildIfNeeded()
         {
             if (!m_IsRawDataDirty)
             {
@@ -254,7 +254,7 @@ namespace NRKernal
 
         
         /// <summary> Updates the clip version. </summary>
-        protected void UpdateClipVersion()
+        private void UpdateClipVersion()
         {
             string cliBinaryPath;
             if (!FindCliBinaryPath(out cliBinaryPath))

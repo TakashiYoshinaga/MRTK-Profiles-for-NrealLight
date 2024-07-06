@@ -22,7 +22,6 @@ namespace NRKernal
     internal delegate void OnGfxThreadSubmitCallback(UInt64 frameHandle);
     internal delegate void OnGfxThreadPopulateFrameCallback();
     internal delegate void OnDisplaySubSystemStartCallback(bool start);
-    internal delegate void OnInputSubSystemStartCallback(bool start);
 
     /// <summary> A controller for handling native glasses. </summary>
     internal partial class NativeXRPlugin
@@ -36,11 +35,6 @@ namespace NRKernal
         internal static void RegistDisplaySubSystemEventCallback(OnDisplaySubSystemStartCallback onStartCallback)
         {
             NativeApi.RegistDisplaySubSystemEventCallback(onStartCallback);
-        }
-
-        internal static void RegistInputSubSystemEventCallback(OnInputSubSystemStartCallback onStartCallback)
-        {
-            NativeApi.RegistInputSubSystemEventCallback(onStartCallback);
         }
 
         internal static void SetLogLevel(int logLevel)
@@ -156,9 +150,6 @@ namespace NRKernal
 
             [DllImport(NativeConstants.NRNativeXRPlugin, CharSet = CharSet.Auto)]
             public extern static void RegistDisplaySubSystemEventCallback(OnDisplaySubSystemStartCallback onStartCallback);
-
-            [DllImport(NativeConstants.NRNativeXRPlugin, CharSet = CharSet.Auto)]
-            public extern static void RegistInputSubSystemEventCallback(OnInputSubSystemStartCallback onStartCallback);
 
             [DllImport(NativeConstants.NRNativeXRPlugin, CharSet = CharSet.Auto)]
             public static extern void SetLogLevel(int logLevel);

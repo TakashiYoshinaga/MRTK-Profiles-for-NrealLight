@@ -26,7 +26,7 @@ namespace NRKernal
 #if UNITY_EDITOR
             m_NativeHandTracking = new NREmulatorHandTracking();
 #else
-            EnableHandTracking(true);
+            EnableHandTracking();
             m_NativeHandTracking = new NativeHandTracking(NRSessionManager.Instance.NativeAPI);
 #endif
         }
@@ -52,18 +52,12 @@ namespace NRKernal
         public override void Resume()
         {
             base.Resume();
-            EnableHandTracking(true);
+            EnableHandTracking();
         }
 
-        public override void Pause()
+        private void EnableHandTracking()
         {
-            base.Pause();
-            EnableHandTracking(false);
-        }
-
-        private void EnableHandTracking(bool enabled)
-        {
-            NRSessionManager.Instance.NativeAPI.Configuration.SetHandTrackingEnabled(enabled);
+            NRSessionManager.Instance.NativeAPI.Configuration.SetHandTrackingEnabled(true);
         }
 
         private HandState GetHandState(int index)

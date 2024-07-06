@@ -15,7 +15,7 @@ namespace NRKernal
     /// <summary> A trackable image in the real world detected by NRInternal. </summary>
     public class NRTrackableImage : NRTrackable
     {
-        public NRTrackableImageSubsystem TrackableImageSubsystem
+        internal NRTrackableImageSubsystem TrackableImageSubsystem
         {
             get
             {

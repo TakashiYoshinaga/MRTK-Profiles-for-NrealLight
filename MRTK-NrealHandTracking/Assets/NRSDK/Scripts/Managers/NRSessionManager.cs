@@ -410,7 +410,7 @@ namespace NRKernal
 
         /// <summary> Sets a configuration. </summary>
         /// <param name="config"> The configuration.</param>
-        public async System.Threading.Tasks.Task SetConfiguration(NRSessionConfig config)
+        public void SetConfiguration(NRSessionConfig config)
         {
             if (SessionState == SessionState.UnInitialized
                 || SessionState == SessionState.Destroyed
@@ -428,7 +428,7 @@ namespace NRKernal
             // AsyncTaskExecuter.Instance.RunAction(() =>
             // {
                 NRDebugger.Info("[NRSessionManager] Update config");
-                await NativeAPI.Configuration.UpdateConfig(config);
+                NativeAPI.Configuration.UpdateConfig(config);
             // });
 #endif
         }
@@ -579,11 +579,10 @@ namespace NRKernal
             VirtualDisplayer?.Destroy();
             NRSwapChainMan.Destroy();            
             TrackableFactory.Destroy();
-            NRInput.Destroy();
             TrackingSubSystem.Destroy();
-            
             NRFrame.DestroySubsystem<NRTrackingSubsystemDescriptor, NRTrackingSubsystem>(NRTrackingSubsystemDescriptor.Name);
 
+            NRInput.Destroy();
             NRDevice.Instance?.Destroy();
 
             if (TrackingLostListener != null)

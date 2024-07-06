@@ -225,21 +225,6 @@ namespace NRKernal
             };
 
             NRDebugger.Info("[NRInput] Started");
-            NRSessionManager.Instance.TrackingSubSystem.RegistInputSubSystemEventCallback(
-                (bool start) =>
-                {
-                    if (CurrentInputSourceType == InputSourceEnum.Hands)
-                    {
-                        if (start)
-                        {
-                            Resume();
-                        }
-                        else
-                        {
-                            Pause();
-                        }
-                    }
-                });
         }
 
         /// <summary> Executes the 'update' action. </summary>

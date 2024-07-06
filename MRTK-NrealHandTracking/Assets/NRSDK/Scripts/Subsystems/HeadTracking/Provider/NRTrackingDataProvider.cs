@@ -13,8 +13,6 @@
 
 namespace NRKernal
 {
-    using AOT;
-    using System;
     using System.Collections.Generic;
     using UnityEngine;
 #if USING_XR_SDK
@@ -37,7 +35,6 @@ namespace NRKernal
             }
         }
 #endif
-        static Action<bool> OnInputSubSystemStart;
 
         public NRTrackingDataProvider()
         {
@@ -59,25 +56,12 @@ namespace NRKernal
             NRDebugger.Info("[NRTrackingDataProvider] Start");
 #if USING_XR_SDK
             XRInputSubsystem?.Start();
-            NativeXRPlugin.RegistInputSubSystemEventCallback(InputSubSystemStart);
             m_NativeHeadTracking.Create(NativeXRPlugin.GetHeadTrackingHandle());
 #else
             m_NativePerception.Start();
             m_NativeHeadTracking.Create();
 #endif
             NRDebugger.Info("[NRTrackingDataProvider] Started");
-        }
-
-        [MonoPInvokeCallback(typeof(OnInputSubSystemStartCallback))]
-        private static void InputSubSystemStart(bool start)
-        {
-            NRDebugger.Info("[NRTrackingDataProvider] InputSubSystemStart start = {0}", start);
-            OnInputSubSystemStart?.Invoke(start);
-        }
-
-        public void RegistInputSubSystemEventCallback(Action<bool> callback)
-        {
-            OnInputSubSystemStart += callback;
         }
 
         public void Pause()

@@ -7,6 +7,8 @@
 * 
 *****************************************************************************/
 
+using System;
+
 namespace NRKernal
 {
     public class NRTrackingSubsystemDescriptor : IntegratedSubsystemDescriptor<NRTrackingSubsystem>
@@ -50,6 +52,11 @@ namespace NRKernal
         {
             base.Destroy();
             m_Provider.Destroy();
+        }
+
+        public void RegistInputSubSystemEventCallback(Action<bool> callback)
+        {
+            m_Provider.RegistInputSubSystemEventCallback(callback);
         }
 
         public bool GetFramePresentHeadPose(ref UnityEngine.Pose pose, ref LostTrackingReason lostReason, ref ulong timestamp)

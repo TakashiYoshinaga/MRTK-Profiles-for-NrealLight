@@ -9,6 +9,7 @@
 
 namespace NRKernal
 {
+    using System;
     using UnityEngine;
 
 #if UNITY_EDITOR
@@ -98,6 +99,10 @@ namespace NRKernal
         public ulong GetHMDTimeNanos()
         {
             return 0;
+        }
+
+        public void RegistInputSubSystemEventCallback(Action<bool> callback)
+        {
         }
     }
 #endif

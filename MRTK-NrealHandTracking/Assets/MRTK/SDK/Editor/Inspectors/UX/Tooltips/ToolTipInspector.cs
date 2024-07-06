@@ -249,7 +249,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
                 Handles.color = Color.cyan;
                 handleSize = HandleUtility.GetHandleSize(toolTip.PivotPosition) * handleSizeMultiplier;
                 arrowSize = handleSize * 2;
-                Vector3 newPivotPosition = Handles.FreeMoveHandle(toolTip.PivotPosition, Quaternion.identity, handleSize, Vector3.zero, Handles.SphereHandleCap);
+                var fmh_252_90_638558622883739100 = Quaternion.identity; Vector3 newPivotPosition = Handles.FreeMoveHandle(toolTip.PivotPosition, handleSize, Vector3.zero, Handles.SphereHandleCap);
                 Handles.ArrowHandleCap(0, newPivotPosition, Quaternion.LookRotation(Vector3.up), arrowSize, EventType.Repaint);
                 Handles.ArrowHandleCap(0, newPivotPosition, Quaternion.LookRotation(Vector3.forward), arrowSize, EventType.Repaint);
                 Handles.ArrowHandleCap(0, newPivotPosition, Quaternion.LookRotation(Vector3.right), arrowSize, EventType.Repaint);
@@ -260,7 +260,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
                 Handles.color = Color.cyan;
                 handleSize = HandleUtility.GetHandleSize(toolTip.AnchorPosition) * handleSizeMultiplier;
                 arrowSize = handleSize * 2;
-                Vector3 newAnchorPosition = Handles.FreeMoveHandle(toolTip.AnchorPosition, Quaternion.identity, HandleUtility.GetHandleSize(toolTip.AnchorPosition) * handleSizeMultiplier, Vector3.zero, Handles.SphereHandleCap);
+                var fmh_263_92_638558622883742871 = Quaternion.identity; Vector3 newAnchorPosition = Handles.FreeMoveHandle(toolTip.AnchorPosition, HandleUtility.GetHandleSize(toolTip.AnchorPosition) * handleSizeMultiplier, Vector3.zero, Handles.SphereHandleCap);
                 Handles.ArrowHandleCap(0, newAnchorPosition, Quaternion.LookRotation(Vector3.up), arrowSize, EventType.Repaint);
                 Handles.ArrowHandleCap(0, newAnchorPosition, Quaternion.LookRotation(Vector3.forward), arrowSize, EventType.Repaint);
                 Handles.ArrowHandleCap(0, newAnchorPosition, Quaternion.LookRotation(Vector3.right), arrowSize, EventType.Repaint);
@@ -290,7 +290,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
                     Handles.color = Color.cyan;
                     handleSize = HandleUtility.GetHandleSize(toolTip.AttachPointPosition) * handleSizeMultiplier;
                     arrowSize = handleSize * 2;
-                    Vector3 newAttachPointPosition = Handles.FreeMoveHandle(toolTip.AttachPointPosition, Quaternion.identity, HandleUtility.GetHandleSize(toolTip.AttachPointPosition) * handleSizeMultiplier, Vector3.zero, Handles.SphereHandleCap);
+                    var fmh_293_106_638558622883746964 = Quaternion.identity; Vector3 newAttachPointPosition = Handles.FreeMoveHandle(toolTip.AttachPointPosition, HandleUtility.GetHandleSize(toolTip.AttachPointPosition) * handleSizeMultiplier, Vector3.zero, Handles.SphereHandleCap);
                     Handles.ArrowHandleCap(0, newAttachPointPosition, Quaternion.LookRotation(Vector3.up), arrowSize, EventType.Repaint);
                     Handles.ArrowHandleCap(0, newAttachPointPosition, Quaternion.LookRotation(Vector3.forward), arrowSize, EventType.Repaint);
                     Handles.ArrowHandleCap(0, newAttachPointPosition, Quaternion.LookRotation(Vector3.right), arrowSize, EventType.Repaint);

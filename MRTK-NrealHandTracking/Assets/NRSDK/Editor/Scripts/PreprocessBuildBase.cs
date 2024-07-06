@@ -239,7 +239,7 @@ namespace NRKernal
             }
         }
 
-        /// In order to support 'queries' in manifest, gradle plugin must be higher than 3.4.3. 
+        /// In order to support 'queries' in manifest, gradle plugin must be higher than 4.2.2. 
         /// For unity version lower than 2020, this can be modified by using 'Custom Gradle Template', then modify the gradle plugin version in template file
         public static void AutoGenerateAndroidGradleTemplate()
         {
@@ -303,7 +303,7 @@ namespace NRKernal
             }
             string gradleInProject = Application.dataPath + "/Plugins/Android/" + templateFileName;
             AndroidGradleTemplate gradleTmp = new AndroidGradleTemplate(gradleInProject);
-            gradleTmp.SetMinPluginVersion(3, 4, 3);
+            gradleTmp.SetMinPluginVersion(4, 2, 2);
             gradleTmp.PreprocessGradleFile();
         }
 

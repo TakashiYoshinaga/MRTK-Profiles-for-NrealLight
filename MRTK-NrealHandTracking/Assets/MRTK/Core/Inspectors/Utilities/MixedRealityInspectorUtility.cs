@@ -223,7 +223,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
 
             Handles.DrawDottedLine(origin, position, DottedLineScreenSpace);
             Handles.ArrowHandleCap(0, position, Quaternion.LookRotation(direction), handleSize * 2, EventType.Repaint);
-            Vector3 newPosition = Handles.FreeMoveHandle(position, Quaternion.identity, handleSize, Vector3.zero, Handles.CircleHandleCap);
+            var fmh_226_68_638558622879738913 = Quaternion.identity; Vector3 newPosition = Handles.FreeMoveHandle(position, handleSize, Vector3.zero, Handles.CircleHandleCap);
 
             if (recordUndo)
             {
@@ -285,7 +285,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
                 handleSize = Mathf.Lerp(handleSize, HandleUtility.GetHandleSize(position) * handleSize, 0.75f);
             }
 
-            Vector3 newPosition = Handles.FreeMoveHandle(position, Quaternion.identity, handleSize, Vector3.zero, Handles.CircleHandleCap);
+            var fmh_288_68_638558622879790182 = Quaternion.identity; Vector3 newPosition = Handles.FreeMoveHandle(position, handleSize, Vector3.zero, Handles.CircleHandleCap);
 
             if (recordUndo && position != newPosition)
             {
@@ -321,7 +321,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
             }
 
             // Multiply square handle to match other types
-            Vector3 newPosition = Handles.FreeMoveHandle(position, Quaternion.identity, handleSize * 0.8f, Vector3.zero, Handles.RectangleHandleCap);
+            var fmh_324_68_638558622879797979 = Quaternion.identity; Vector3 newPosition = Handles.FreeMoveHandle(position, handleSize * 0.8f, Vector3.zero, Handles.RectangleHandleCap);
 
             if (recordUndo && position != newPosition)
             {
@@ -357,7 +357,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
             }
 
             // Multiply sphere handle size to match other types
-            Vector3 newPosition = Handles.FreeMoveHandle(position, Quaternion.identity, handleSize * 2, Vector3.zero, Handles.SphereHandleCap);
+            var fmh_360_68_638558622879804799 = Quaternion.identity; Vector3 newPosition = Handles.FreeMoveHandle(position, handleSize * 2, Vector3.zero, Handles.SphereHandleCap);
 
             if (recordUndo && position != newPosition)
             {
@@ -423,7 +423,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
                 rotation = Quaternion.LookRotation(vector);
             }
 
-            Vector3 newPosition = Handles.FreeMoveHandle(handlePosition, rotation, handleSize, Vector3.zero, Handles.DotHandleCap);
+            Vector3 newPosition = Handles.FreeMoveHandle(handlePosition, handleSize, Vector3.zero, Handles.DotHandleCap);
 
             if (recordUndo && handlePosition != newPosition)
             {

@@ -27,5 +27,7 @@ namespace NRKernal
         bool SwitchTrackingType(TrackingType type);
 
         void Recenter();
+
+        void RegistInputSubSystemEventCallback(Action<bool> callback);
     }
 }

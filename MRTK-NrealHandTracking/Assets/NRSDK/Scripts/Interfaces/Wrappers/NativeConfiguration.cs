@@ -80,14 +80,22 @@ namespace NRKernal
             if (m_ConfigHandle == 0)
             {
                 m_ConfigHandle = this.Create();
+                if (m_ConfigHandle == 0)
+                {
+                    NRDebugger.Info("[NativeConfigration] Faild to Update NRSessionConfig!!!");
+                    m_IsUpdateConfigLock = false;
+                    return false;
+                }
             }
 
-            if (m_ConfigHandle == 0 || m_LastSessionConfig.Equals(config))
+            if (m_LastSessionConfig.Equals(config))
             {
-                NRDebugger.Info("[NativeConfigration] Faild to Update NRSessionConfig!!!");
+                NRDebugger.Info("[NativeConfigration] Config not changed");
                 m_IsUpdateConfigLock = false;
                 return false;
             }
+
+            NRDebugger.Info($"[NativeConfigration] UpdateConfig m_ConfigHandle={m_ConfigHandle}");
 
             await UpdatePlaneFindMode(config);
             await UpdateImageTrackingConfig(config);
@@ -125,6 +133,10 @@ namespace NRKernal
                         var result = SetTrackableImageDataBase(m_ConfigHandle, 0);
                         if (result)
                         {
+                            foreach(var kv in m_TrackableImageDatabaseDict)
+                            {
+                                m_NativeTrackableImage.DestroyDataBase(kv.Value);
+                            }
                             m_TrackableImageDatabaseDict.Clear();
                         }
                         NRDebugger.Info("[NativeConfigration] Disable trackable image result : " + result);
@@ -144,7 +156,7 @@ namespace NRKernal
                         result = m_NativeTrackableImage.LoadDataBase(m_DatabaseHandle, config.TrackingImageDatabase.TrackingImageDataPath);
                         NRDebugger.Info("[NativeConfigration] LoadDataBase path:{0} result:{1} ", config.TrackingImageDatabase.TrackingImageDataPath, result);
                         result = SetTrackableImageDataBase(m_ConfigHandle, m_DatabaseHandle);
-                        NRDebugger.Info("[NativeConfigration] SetTrackableImageDataBase result : " + result);
+                        NRDebugger.Info($"[NativeConfigration] SetTrackableImageDataBase PerceptionHandle={PerceptionHandle} m_ConfigHandle={m_ConfigHandle} m_DatabaseHandle={m_DatabaseHandle} result={result}");
                         break;
                     default:
                         break;
@@ -168,6 +180,10 @@ namespace NRKernal
             UInt64 config_handle = 0;
             var result = NativeApi.NRConfigCreate(PerceptionHandle, ref config_handle);
             NativeErrorListener.Check(result, this, "Create");
+            if(result == NativeResult.Success)
+            {
+                NRDebugger.Info($"[NativeConfigration] Create ConfigHandle={config_handle}");
+            }
             return config_handle;
         }
 

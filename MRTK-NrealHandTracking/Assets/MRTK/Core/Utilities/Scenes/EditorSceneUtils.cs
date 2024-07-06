@@ -188,7 +188,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities
                 string scenePath = AssetDatabase.GetAssetOrScenePath(sceneInfo.Asset);
                 EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
 
-                if (setAsFirst && EditorSceneManager.loadedSceneCount >= 1)
+                if (setAsFirst && SceneManager.loadedSceneCount >= 1)
                 {   // Move the scene to first in order in the hierarchy
                     Scene nextScene = EditorSceneManager.GetSceneAt(0);
                     EditorSceneManager.MoveSceneBefore(editorScene, nextScene);

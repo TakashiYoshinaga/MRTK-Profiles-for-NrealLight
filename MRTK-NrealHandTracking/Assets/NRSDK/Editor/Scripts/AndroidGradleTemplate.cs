@@ -96,8 +96,10 @@ namespace NRKernal
 
                         if (updateVersion)
                         {
-                            result = line.Replace(subVersion, "3.4.3");
-                            Debug.LogFormat("update gradle setting : {0} --> {1}", subVersion, "3.4.3");
+                            string version = string.Format("{0}.{1}.{2}", mMajorVersionNum, mMiddleVersionNum,
+                                mMinorVersionNum);
+                            result = line.Replace(subVersion, version);
+                            Debug.LogFormat("update gradle setting : {0} --> {1}", subVersion, version);
                         }
                     }
                 }

@@ -12,7 +12,7 @@ Uity package including MRTK profiles, scripts and prefabs to use hand tracking a
 ## Dependencies:
 I have tested the combination of following SDKs in my environment but other combinations probably work as well.<br>
 These SDK must be installed before hand.<br><br>
-(1) NRSDK Unity SDK 1.10.2<br>
+(1) NRSDK Unity SDK 1.9.5<br>
 <br>
 (2) MRTK-Unity v2.8.2<br>
 https://github.com/microsoft/MixedRealityToolkit-Unity/releases/tag/v2.8.2

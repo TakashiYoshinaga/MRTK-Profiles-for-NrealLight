@@ -293,8 +293,8 @@ namespace NRKernal
 
         public class OneEuroFilter
         {
-            public float Beta = 10f;
-            public float MinCutoff = 1.0f;
+            public float Beta = 0.01f;
+            public float MinCutoff = 2.0f;
             const float DCutOff = 1.0f;
             (float t, Vector3 x, Vector3 dx) _prev;
 

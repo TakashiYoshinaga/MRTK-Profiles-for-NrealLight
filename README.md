@@ -7,14 +7,13 @@ Unity project to try hand tracking and MRTK together without installation of NRS
 nstaller of demo application to trya hand tracking feature. Just install the app to try this out! <br> <br>
 <b>UnityPackage:</b> <br>
 Uity package including MRTK profiles, scripts and prefabs to use hand tracking and MRTK. <br>
-Please install it into your own Uity project if you make hand tracking feature work with MRTK. (See dependency.)<br>
-
+- Please install it into your own Uity project if you make hand tracking feature work with MRTK. (See dependency.)<br>
+- Additionally, please replace file `MixedRealityInputSystem.cs` of MRTK with the same name file stored in this repository.
 ## Dependencies:
 I have tested the combination of following SDKs in my environment but other combinations probably work as well.<br>
 These SDK must be installed before hand.<br><br>
-(1) NRSDK Unity SDK 1.10.0<br>
-https://developer.nreal.ai/download
-<br><br>
+(1) NRSDK Unity SDK 1.10.2<br>
+<br>
 (2) MRTK-Unity v2.8.2<br>
 https://github.com/microsoft/MixedRealityToolkit-Unity/releases/tag/v2.8.2
 <br>

@@ -47,19 +47,6 @@ namespace NRKernal
             }
         }
 
-        /// <summary> Interface of external frame consumer. </summary>
-        public interface IExternFrameConsumer
-        {
-            void UpdateFrame(FrameRawData frame);
-        }
-
-        protected IExternFrameConsumer m_ExternFrameConsumer;
-
-        public void RegisterFrameConsumer(IExternFrameConsumer consumer)
-        {
-            m_ExternFrameConsumer = consumer;
-        }
-
         /// <summary> Queue of fixed sized. </summary>
         public class FixedSizedQueue
         {
@@ -312,10 +299,6 @@ namespace NRKernal
             if (result)
             {
                 m_CameraFrames.Enqueue(frame);
-                if (m_ExternFrameConsumer != null)
-                {
-                    m_ExternFrameConsumer.UpdateFrame(frame);
-                }
             }
             else
             {

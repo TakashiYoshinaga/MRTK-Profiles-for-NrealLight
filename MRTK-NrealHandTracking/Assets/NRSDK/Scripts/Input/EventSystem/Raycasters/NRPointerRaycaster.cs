@@ -53,8 +53,6 @@ namespace NRKernal
         protected readonly List<RaycastResult> sortedRaycastResults = new List<RaycastResult>();
         /// <summary> The break points. </summary>
         protected readonly List<Vector3> breakPoints = new List<Vector3>();
-        /// <summary> Temporary raycast results. </summary>
-        private readonly List<RaycastResult> temporaryRaycastResults = new List<RaycastResult>();
 
         /// <summary> The related hand. </summary>
         private ControllerHandEnum m_RelatedHand;
@@ -81,16 +79,7 @@ namespace NRKernal
         public NRPointerEventData HoverEventData { get { return buttonEventDataList.Count > 0 ? buttonEventDataList[0] : null; } }
         /// <summary> Gets a list of button event data. </summary>
         /// <value> A list of button event data. </value>
-        private ReadOnlyCollection<NRPointerEventData> readonlyButtonEventDataList;
-        public ReadOnlyCollection<NRPointerEventData> ButtonEventDataList 
-        {
-            get
-            {
-                if (readonlyButtonEventDataList == null)
-                    readonlyButtonEventDataList = buttonEventDataList.AsReadOnly();
-                return readonlyButtonEventDataList;
-            } 
-        }
+        public ReadOnlyCollection<NRPointerEventData> ButtonEventDataList { get { return buttonEventDataList.AsReadOnly(); } }
 
         /// <summary> <para>See MonoBehaviour.Start.</para> </summary>
         protected override void Start()
@@ -196,10 +185,10 @@ namespace NRKernal
         /// <param name="raycastResults"> The raycast results.</param>
         public void Raycast(Ray ray, float distance, List<RaycastResult> raycastResults)
         {
-            temporaryRaycastResults.Clear();
+            var results = new List<RaycastResult>();
             if (enablePhysicsRaycast)
             {
-                PhysicsRaycast(ray, distance, temporaryRaycastResults);
+                PhysicsRaycast(ray, distance, results);
             }
             if (enableGraphicRaycast)
             {
@@ -209,17 +198,17 @@ namespace NRKernal
                     var target = tempCanvases[i];
                     if (target == null || !target.enabled)
                         continue;
-                    GraphicRaycast(target, target.ignoreReversedGraphics, ray, distance, this, temporaryRaycastResults);
+                    GraphicRaycast(target.canvas, target.ignoreReversedGraphics, ray, distance, this, results);
                 }
             }
             var comparer = GetRaycasterResultComparer();
             if (comparer != null)
             {
-                temporaryRaycastResults.Sort(comparer);
+                results.Sort(comparer);
             }
-            for (int i = 0, imax = temporaryRaycastResults.Count; i < imax; ++i)
+            for (int i = 0, imax = results.Count; i < imax; ++i)
             {
-                raycastResults.Add(temporaryRaycastResults[i]);
+                raycastResults.Add(results[i]);
             }
         }
 
@@ -254,14 +243,51 @@ namespace NRKernal
         /// <param name="distance">               The distance.</param>
         /// <param name="raycaster">              The raycaster.</param>
         /// <param name="raycastResults">         The raycast results.</param>
-        public virtual void GraphicRaycast(ICanvasRaycastTarget raycastTarget, bool ignoreReversedGraphics, Ray ray, float distance, NRPointerRaycaster raycaster, List<RaycastResult> raycastResults)
+        public virtual void GraphicRaycast(Canvas canvas, bool ignoreReversedGraphics, Ray ray, float distance, NRPointerRaycaster raycaster, List<RaycastResult> raycastResults)
         {
-            if (raycastTarget.canvas == null)
+            if (canvas == null)
                 return;
 
             var eventCamera = raycaster.eventCamera;
             var screenCenterPoint = NRInputModule.ScreenCenterPoint;
-            raycastTarget.GraphicRaycast(ignoreReversedGraphics, ray, distance, screenCenterPoint, raycaster, raycastResults);
+            var graphics = GraphicRegistry.GetGraphicsForCanvas(canvas);
+
+            for (int i = 0; i < graphics.Count; ++i)
+            {
+                var graphic = graphics[i];
+
+                // -1 means it hasn't been processed by the canvas, which means it isn't actually drawn
+                if (graphic.depth == -1 || !graphic.raycastTarget)
+                    continue;
+
+                if (!RectTransformUtility.RectangleContainsScreenPoint(graphic.rectTransform, screenCenterPoint, eventCamera))
+                    continue;
+
+                if (ignoreReversedGraphics && Vector3.Dot(ray.direction, graphic.transform.forward) <= 0f)
+                    continue;
+
+                if (!graphic.Raycast(screenCenterPoint, eventCamera))
+                    continue;
+
+                float dist;
+                new Plane(graphic.transform.forward, graphic.transform.position).Raycast(ray, out dist);
+                if (float.IsNaN(dist) || dist > distance)
+                    continue;
+
+                raycastResults.Add(new RaycastResult
+                {
+                    gameObject = graphic.gameObject,
+                    module = raycaster,
+                    distance = dist,
+                    worldPosition = ray.GetPoint(dist),
+                    worldNormal = -graphic.transform.forward,
+                    screenPosition = screenCenterPoint,
+                    index = raycastResults.Count,
+                    depth = graphic.depth,
+                    sortingLayer = canvas.sortingLayerID,
+                    sortingOrder = canvas.sortingOrder
+                });
+            }
         }
     }
     

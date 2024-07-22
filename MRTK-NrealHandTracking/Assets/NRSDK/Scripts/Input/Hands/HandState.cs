@@ -22,14 +22,11 @@ namespace NRKernal
 
     public enum HandGesture
     {
-        None = -1,
+        None = 0,
         OpenHand,
-        Grab,
-        Pinch,
         Point,
-        Victory,
-        Call,
-        System,
+        Grab,
+        Victory
     }
 
     public enum HandJointID
@@ -69,9 +66,9 @@ namespace NRKernal
         public bool isTracked;
         public Pose pointerPose;
         public bool pointerPoseValid;
-        public bool isPinching => currentGesture == HandGesture.Pinch;
+        public bool isPinching;
+        public float pinchStrength;
         public HandGesture currentGesture;
-        public float confidence;
         public readonly Dictionary<HandJointID, Pose> jointsPoseDict = new Dictionary<HandJointID, Pose>();
 
         public HandState(HandEnum handEnum)
@@ -86,6 +83,8 @@ namespace NRKernal
             isTracked = false;
             pointerPose = Pose.identity;
             pointerPoseValid = false;
+            isPinching = false;
+            pinchStrength = 0f;
             currentGesture = HandGesture.None;
             jointsPoseDict.Clear();
         }

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace NRKernal
+namespace NRKernal.NRExamples
 {
     /// <summary> A nr home menu. </summary>
     public class NRHomeMenu : MonoBehaviour
@@ -50,7 +50,7 @@ namespace NRKernal
         private void OnComfirmButtonClick()
         {
             Hide();
-            NRAppManager.QuitApplication();
+            AppManager.QuitApplication();
         }
 
         /// <summary> Executes the 'cancel button click' action. </summary>

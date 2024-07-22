@@ -34,9 +34,6 @@ namespace NRKernal
         /// <summary> Number of. </summary>
         private int m_Count;
 
-        /// <summary> Current time. </summary>
-        private static float m_CurrentTime;
-
         /// <summary> True once initialization is complete. </summary>
         private static bool m_Initialized;
 
@@ -91,7 +88,6 @@ namespace NRKernal
                 UnityEngine.Object.DontDestroyOnLoad(MainThreadDispather.m_Current);
                 MainThreadDispather.m_Initialized = true;
                 MainThreadDispather.m_ThreadId = Thread.CurrentThread.ManagedThreadId;
-                MainThreadDispather.m_CurrentTime = Time.time;
             }
         }
 
@@ -120,7 +116,7 @@ namespace NRKernal
                 {
                     MainThreadDispather.Current.m_Delayed.Add(new MainThreadDispather.DelayedQueueItem
                     {
-                        time = m_CurrentTime + time,
+                        time = Time.time + time,
                         action = action
                     });
                 }
@@ -155,7 +151,6 @@ namespace NRKernal
         /// <summary> Updates this object. </summary>
         private void Update()
         {
-            MainThreadDispather.m_CurrentTime = Time.time;
             List<Action> actions = this.m_Actions;
             if (actions.Count > 0)
             {
@@ -177,7 +172,7 @@ namespace NRKernal
                     for (int j = 0; j < this.m_Delayed.Count; j++)
                     {
                         MainThreadDispather.DelayedQueueItem delayedQueueItem = this.m_Delayed[j];
-                        if (delayedQueueItem.time <= MainThreadDispather.m_CurrentTime)
+                        if (delayedQueueItem.time <= Time.time)
                         {
                             delayedQueueItem.action();
                             this.m_Delayed.RemoveAt(j);

@@ -9,13 +9,10 @@ namespace NRKernal.NRExamples
     {
         public class GestureName
         {
-            public const string Gesture_Open_Hand = "Open Hand";
-            public const string Gesture_Grab = "Grab";
-            public const string Gesture_Pinch = "Pinch";
             public const string Gesture_Point = "Point";
+            public const string Gesture_Grab = "Grab";
             public const string Gesture_Victory = "Victory";
-            public const string Gesture_Call = "Call";
-            public const string Gesture_System = "System";
+            public const string Gesture_Open_Hand = "Open Hand";
         }
 
         public HandEnum handEnum;
@@ -37,26 +34,17 @@ namespace NRKernal.NRExamples
                 return;
             switch (handState.currentGesture)
             {
-                case HandGesture.OpenHand:
-                    gestureTxt.text = GetHandEnumLabel() + GestureName.Gesture_Open_Hand;
-                    break;
-                case HandGesture.Grab:
-                    gestureTxt.text = GetHandEnumLabel() + GestureName.Gesture_Grab;
-                    break;
-                case HandGesture.Pinch:
-                    gestureTxt.text = GetHandEnumLabel() + GestureName.Gesture_Pinch;
-                    break;
                 case HandGesture.Point:
                     gestureTxt.text = GetHandEnumLabel() + GestureName.Gesture_Point;
                     break;
+                case HandGesture.Grab:
+                    gestureTxt.text = GetHandEnumLabel() + GestureName.Gesture_Grab;
+                    break;;
                 case HandGesture.Victory:
                     gestureTxt.text = GetHandEnumLabel() + GestureName.Gesture_Victory;
                     break;
-                case HandGesture.Call:
-                    gestureTxt.text = GetHandEnumLabel() + GestureName.Gesture_Call;
-                    break;
-                case HandGesture.System:
-                    gestureTxt.text = GetHandEnumLabel() + GestureName.Gesture_System;
+                case HandGesture.OpenHand:
+                    gestureTxt.text = GetHandEnumLabel() + GestureName.Gesture_Open_Hand;
                     break;
                 default:
                     gestureTxt.text = string.Empty;

@@ -1,4 +1,4 @@
-package ai.nreal.android.gallery;
+package ai.nreal.android.nebulaspaceproxy.gallery;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;

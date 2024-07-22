@@ -20,8 +20,7 @@ namespace NRKernal
     public interface IFrameProcessor
     {
         UInt64 GetFrameHandle();
-        UInt64 GetViewPortListHandle();
-        void SubmitFrame(ulong frameHandle, ulong viewPortListHandle);
+        void SubmitFrame();
         void Update();
         void Initialize(NativeRenderring nativeRenderer);
         void Destroy();
@@ -279,7 +278,6 @@ namespace NRKernal
         {
             if (m_CurrentState == RendererState.Running)
             {
-                // NRDebugger.Info("[NRRender] Update: frameCnt={0}", Time.frameCount);
                 if (m_FrameProcessor == null)
                 {
                     leftCamera.targetTexture = eyeTextures[currentEyeTextureIdx];
@@ -381,16 +379,14 @@ namespace NRKernal
                     UInt64 frame_handle = NativeRenderring.CreateFrameHandle();
                     info.frameHandle = frame_handle;
                     // NRDebugger.Info("[NRRender] RenderCoroutine: frameHandle={0}", frame_handle);
-                    NativeRenderring?.WriteFrameData(info, 0, true);
+                    NativeRenderring?.WriteFrameData(info, true);
                     GL.IssuePluginEvent(RenderThreadHandlePtr, SETRENDERTEXTUREEVENT);
                 }
                 else
                 {
                     info.frameHandle = m_FrameProcessor.GetFrameHandle();
-                    var viewportListHandle = m_FrameProcessor.GetViewPortListHandle();
-
-                    // NRDebugger.Info("[NRRender] RenderCoroutine FrameProcessor: frameCnt={0}, frameHandle={1}, viewportListHandle={2}", Time.frameCount, info.frameHandle, viewportListHandle);
-                    NativeRenderring?.WriteFrameData(info, viewportListHandle, false);
+                    // NRDebugger.Info("[NRRender] RenderCoroutine FrameProcessor: frameHandle={0}", info.frameHandle);
+                    NativeRenderring?.WriteFrameData(info, false);
                     GL.IssuePluginEvent(RenderThreadHandlePtr, SUBMIT_EVENT);
                 }
                 // reset focuse distance and frame changed type to default value every frame.
@@ -414,7 +410,7 @@ namespace NRKernal
         private static void RunOnRenderThread(int eventID)
         {
             if (eventID != SETRENDERTEXTUREEVENT && eventID != SUBMIT_EVENT)
-                NRDebugger.Info("[NRRender] RunOnRenderThread : eventID={0}, frameCnt={1}", eventID, Time.frameCount);
+                NRDebugger.Info("[NRRender] RunOnRenderThread : eventID={0}", eventID);
 
             if (eventID == STARTNATIVERENDEREVENT)
             {
@@ -448,7 +444,8 @@ namespace NRKernal
             else if (eventID == SUBMIT_EVENT)
             {
                 var renderer = NRSessionManager.Instance.NRRenderer;
-                NativeRenderring?.DoSubmitFrame(renderer.m_FrameProcessor);
+                NativeRenderring?.PrepareForFrame();
+                renderer.m_FrameProcessor.SubmitFrame();
             }
         }
 

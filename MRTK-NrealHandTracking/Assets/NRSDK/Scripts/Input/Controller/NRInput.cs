@@ -196,7 +196,7 @@ namespace NRKernal
         public static Transform CameraCenter { get { return Instance.GetCameraCenter(); } }
 
         /// <summary> The HandsManager which controls the hand-tracking. </summary>
-        public static NRHandsManager Hands = new NRHandsManager();
+        public static HandsManager Hands = new HandsManager();
 
         /// <summary> Starts this object. </summary>
         private void Start()

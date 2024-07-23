@@ -1,5 +1,7 @@
 # MRTK-Profiles-for-NrealLight
-
+## Notice!
+Refer the following branch if you are DevKit user because DevKit is no longer supported from the v2.2.x of NRSDK 
+https://github.com/TakashiYoshinaga/MRTK-Profiles-for-NrealLight/tree/NRSDK1.9
 ## What's Included
 <b>MRTK-NrealHandTracking:</b> <br>
 Unity project to try hand tracking and MRTK together without installation of NRSDK and MRTK by yourself. <br> <br>

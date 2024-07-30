@@ -40,7 +40,7 @@ https://youtu.be/-bFwu-2yyqw
 (2) Do not forget to replace `MixedRealityInputSystem.cs` file.
 <br><br>
 (3) Use following version if you are using DevKit.  
-https://github.com/TakashiYoshinaga/MRTK-Profiles-for-NrealLight/releases/tag/v1.0.2
+https://github.com/TakashiYoshinaga/MRTK-Profiles-for-NrealLight/releases/tag/v1.9.5  
 
 ## Trouble Shoot
 If hand interaction doesn't work immediately after applying this profile to your project , please reboot unity editor.
